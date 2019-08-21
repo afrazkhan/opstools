@@ -21,8 +21,8 @@ def main(subc_args=None):
 
     allowme_parser = MyParser(description=
         """
-        Given an AWS controlled hostname find out if it's a resource you have access to,
-        find it's security groups if so, and add your IP to the flagged ports
+        Given an AWS controlled hostname, find out if it's a resource you have access to,
+        find it's security groups if so, and allow your IP through the flagged ports
         """
     )
 
@@ -95,6 +95,7 @@ def update_security_group(ec2_client, my_info, security_group, ports):
 
     for port in ports:
         print("Now inserting rule for port " + str(port))
+        port = int(port)
 
         try:
             ec2_client.authorize_security_group_ingress(
