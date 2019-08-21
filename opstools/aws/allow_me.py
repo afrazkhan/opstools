@@ -11,6 +11,7 @@ import socket
 import argparse
 import requests
 import sys
+import os
 
 def main(subc_args=None):
     class MyParser(argparse.ArgumentParser):
@@ -107,7 +108,7 @@ def update_security_group(ec2_client, my_info, security_group, ports):
                         'IpRanges': [
                             {
                                 'CidrIp': my_info['ip'] + "/32",
-                                'Description': "AFRAZ " + my_info['loc']
+                                'Description': "{} ".format(os.getlogin()) + my_info['loc']
                             },
                         ],
                         'ToPort': port,
