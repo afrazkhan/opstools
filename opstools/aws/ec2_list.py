@@ -44,10 +44,10 @@ def print_and_format(simplified_listing):
         print(
             "\033[1mID: \033[0m{0:11}"
             "\033[1m Name: \033[0m{1:30}"
-            "\033[1mIP: \033[0m{2:30}"
+            "\033[1mIP: \033[0m{2:20}"
             "\033[1mPublic IP: \033[0m{3:30}".format(
                 instance['instance_id'],
-                instance['name'],
+                instance['name'][0:29],
                 instance['private_ip'],
                 instance['public_ip']
             )
