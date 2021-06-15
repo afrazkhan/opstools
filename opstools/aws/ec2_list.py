@@ -2,6 +2,8 @@
 
 import boto3
 from termcolor import colored
+import botocore
+import sys
 
 def main():
     simplified_listing = extract_interesting_keys(get_listing())
@@ -9,12 +11,17 @@ def main():
 
 def get_listing():
     ec2 = boto3.client('ec2')
-    listing = ec2.describe_instances(Filters=[
-        {
-            'Name': 'instance-state-name',
-            'Values': [ 'running' ]
-        }
-    ])
+
+    try:
+        listing = ec2.describe_instances(Filters=[
+            {
+                'Name': 'instance-state-name',
+                'Values': [ 'running' ]
+            }
+        ])
+    except botocore.exceptions.ClientError as e:
+        print(e)
+        sys.exit(1)
 
     return listing
 
@@ -52,7 +59,6 @@ def print_and_format(simplified_listing):
                 instance['public_ip']
             )
         )
-
 
 if __name__ == "__main__":
     main()

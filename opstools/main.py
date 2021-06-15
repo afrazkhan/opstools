@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__version__ = "0.0.2"
+__version__ = "0.0.4"
 
 import argparse
 import sys
@@ -19,7 +19,7 @@ def main():
         """,
         add_help=False
     )
-    main_parser.add_argument("command", help="The subcommand to run", choices=["allowme", "ec2ls"])
+    main_parser.add_argument("command", help="The subcommand to run", choices=["allowme", "ec2ls", "timeout-tester"])
 
     args, subc_args = main_parser.parse_known_args()
 
@@ -30,6 +30,10 @@ def main():
     if args.command == "ec2ls":
         import opstools.aws.ec2_list as ec2_list
         ec2_list.main()
+
+    if args.command == "timeout-tester":
+        import opstools.url.timeout_tester as timeout_tester
+        timeout_tester.main(subc_args)
 
 if __name__ == "__main__":
     main()
