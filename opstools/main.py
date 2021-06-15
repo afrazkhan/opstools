@@ -7,7 +7,11 @@ import argparse
 import sys
 
 def main():
+    """ Top level method to be called for all commands """
+
     class MyParser(argparse.ArgumentParser):
+        """ Custom ArgumentParser so we can print a top level help message by default """
+
         def error(self, message):
             sys.stderr.write('error: %s\n' % message)
             self.print_help()
@@ -19,6 +23,7 @@ def main():
         """,
         add_help=False
     )
+
     main_parser.add_argument("command", help="The subcommand to run", choices=["allowme", "ec2ls", "timeout-tester"])
 
     args, subc_args = main_parser.parse_known_args()

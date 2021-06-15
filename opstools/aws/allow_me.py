@@ -6,7 +6,7 @@ group found for that resource. Currently ALBs, ELBs, and EC2 instances are suppo
 """
 
 import boto3
-from botocore.exceptions import ClientError
+from botocore.exceptions import ClientError # pylint: disable=unused-import
 import socket
 import argparse
 import requests
@@ -14,7 +14,11 @@ import sys
 import os
 
 def main(subc_args=None):
+    """ Main method for this command. Uses [subc_args] from parent command as a subset of options """
+
     class MyParser(argparse.ArgumentParser):
+        """ Custom ArgumentParser so we can print the help by default """
+
         def error(self, message):
             sys.stderr.write('error: %s\n' % message)
             self.print_help()
@@ -33,32 +37,37 @@ def main(subc_args=None):
     allowme_parser.add_argument("--port", "-p", help="Add a custom port to the first security group found")
 
     args = allowme_parser.parse_known_args(subc_args)[0]
-
-    addresses = get_aws_addresses(args.hostname)
-    my_info = get_my_info()
     ports = make_port_list(args)
 
     if ports == []:
         print("No ports given to open, nothing to do")
         sys.exit(0)
 
+    my_info = get_my_info()
+    security_group = get_security_group(args.hostname)
+    update_security_group(my_info, security_group, ports)
+
+def get_security_group(hostname):
+    """ Return the security group we need to edit """
+
+    addresses = get_aws_addresses(hostname)
+
     elbv2_client = boto3.client('elbv2')
     elb_client = boto3.client('elb')
     ec2_client = boto3.client('ec2')
 
     security_group = search_albs(elbv2_client, addresses)
-    if security_group != None:
-        update_security_group(ec2_client, my_info, security_group, ports)
-
+    if security_group is not None:
+        return security_group
     security_group = search_ec2(ec2_client, addresses)
-    if security_group != None:
-        update_security_group(ec2_client, my_info, security_group, ports)
-
+    if security_group is not None:
+        return security_group
     security_group = search_elbs(elb_client, addresses)
-    if security_group != None:
-        update_security_group(ec2_client, my_info, security_group, ports)
+    if security_group is not None:
+        return security_group
 
     print("Didn't find that host in ELBs, ALBs, or EC2 instances for the account you're authed to, sorry :/")
+    sys.exit(1)
 
 def get_aws_addresses(hostname):
     """Return a list of IP addresses from the hostname"""
@@ -67,7 +76,7 @@ def get_aws_addresses(hostname):
         return socket.gethostbyname_ex(hostname)[2]
     except socket.gaierror as e:
         print("Couldn't resolve the hostname: {}".format(e))
-        exit(1)
+        sys.exit(1)
 
 def get_my_info():
     """Return dict of {'ip', 'hostname'} for the IP this machine has at the time of calling"""
@@ -79,20 +88,22 @@ def make_port_list(args):
 
     ports = []
 
-    if args.ssh == True:
+    if args.ssh:
         ports.append(22)
-    if args.https == True:
+    if args.https:
         ports.append(443)
         ports.append(80)
-    if args.port != None:
+    if args.port is not None:
         ports.append(args.port)
 
     return ports
 
-def update_security_group(ec2_client, my_info, security_group, ports):
+def update_security_group(my_info, security_group, ports):
     """Add this machine's IP to the security group provided"""
 
     print("Attempting to updated security group {}".format(security_group))
+
+    ec2_client = boto3.client('ec2')
 
     for port in ports:
         print("Now inserting rule for port " + str(port))

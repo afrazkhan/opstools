@@ -7,7 +7,7 @@ import re
 import os
 from setuptools import find_packages, setup
 
-DEPENDENCIES = ["boto3", "termcolor", "requests"]
+DEPENDENCIES = ["boto3", "requests"]
 EXCLUDE_FROM_PACKAGES = ["contrib", "docs", "tests*"]
 CURDIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -16,10 +16,12 @@ with io.open(os.path.join(CURDIR, "README.md"), "r", encoding="utf-8") as f:
 
 
 def get_version():
+    """ Get version from main() """
+
     main_file = os.path.join(CURDIR, "opstools", "main.py")
     _version_re = re.compile(r"__version__\s+=\s+(?P<version>.*)")
-    with open(main_file, "r", encoding="utf8") as f:
-        match = _version_re.search(f.read())
+    with open(main_file, "r", encoding="utf8") as version_file:
+        match = _version_re.search(version_file.read())
         version = match.group("version") if match is not None else '"unknown"'
     return str(ast.literal_eval(version))
 
