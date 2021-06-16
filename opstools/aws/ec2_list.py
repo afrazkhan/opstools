@@ -37,7 +37,11 @@ def extract_interesting_keys(listing):
     simplified_listing = []
 
     for instance in listing['Reservations']:
-        name = next(n for n in instance['Instances'][0]['Tags'] if n['Key'] == 'Name')['Value']
+        try:
+            name = next(n for n in instance['Instances'][0]['Tags'] if n['Key'] == 'Name')['Value']
+        except KeyError:
+            name = instance['Instances'][0]['InstanceId']
+
         instance_id = instance['Instances'][0]['InstanceId']
         private_ip = instance['Instances'][0]['NetworkInterfaces'][0]['PrivateIpAddress']
 
