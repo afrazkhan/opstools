@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__version__ = "0.0.6"
+__version__ = "0.0.7"
 
 import argparse
 import sys
@@ -17,16 +17,16 @@ def main():
             self.print_help()
             sys.exit(2)
 
-    main_parser = MyParser(description=
+    main_search = MyParser(description=
         """
         Swiss army knife of silly ops stuff you couldn't be bothered to script yourself
         """,
         add_help=False
     )
 
-    main_parser.add_argument("command", help="The subcommand to run", choices=["allowme", "ec2ls", "timeout-tester"])
+    main_search.add_argument("command", help="The subcommand to run", choices=["allowme", "ec2ls", "timeout-tester", "log-search"])
 
-    args, subc_args = main_parser.parse_known_args()
+    args, subc_args = main_search.parse_known_args()
 
     if args.command == "allowme":
         import opstools.aws.allow_me as allow_me
@@ -39,6 +39,11 @@ def main():
     if args.command == "timeout-tester":
         import opstools.url.timeout_tester as timeout_tester
         timeout_tester.main(subc_args)
+
+    # WIP
+    # if args.command == "log-search":
+    #     import opstools.file.log_search as log_search
+    #     log_search.main(subc_args)
 
 if __name__ == "__main__":
     main()
