@@ -7,6 +7,7 @@ Given a bucket location for load balancer logs, read and parse the latest logs. 
 import boto3
 from botocore.exceptions import ClientError # pylint: disable=unused-import
 import argparse
+import re
 import sys
 import json
 import datetime
@@ -19,7 +20,7 @@ def main(subc_args=None):
         """ Custom ArgumentParser so we can print the help by default """
 
         def error(self, message):
-            sys.stderr.write('error: %s\n' % message)
+            sys.stderr.write(f"error: {message}\n")
             self.print_help()
             sys.exit(2)
 
@@ -32,9 +33,15 @@ def main(subc_args=None):
 
     lb_logs_parser.add_argument("--lb", help="Name of the load balancer")
     lb_logs_parser.add_argument("--last", "-l", default=2, help="Use last n logfiles. Defaults to 2")
+    lb_logs_parser.add_argument("--search", "-s", default='', help="Space separated greedy search fields. E.g. 'client_port=89.205.139.161'")
     args = lb_logs_parser.parse_known_args(subc_args)[0]
 
-    parse_logs(args.lb, int(args.last))
+    if args.search != '' and not re.match(r"^((\w)+\=([\w.:\/])+\s?)+", args.search):
+        print("The search items must match the format 'field=string'")
+        sys.exit(0)
+    search_items = args.search.split(' ')
+
+    parse_logs(args.lb, int(args.last), search_items)
 
 def get_lb_arns(lb):
     """
@@ -138,7 +145,22 @@ def parse_line(this_line):
 
     return formatted_line
 
-def parse_logs(lb, last):
+def find_in_dict(search_items, this_dict):
+    """
+    Return True if [this_dict] matches all of the [search_items]
+    """
+
+    try:
+        for search_string in search_items:
+            k,v = search_string.split("=")
+            if v not in this_dict[k]:
+                return False
+
+        return True
+    except KeyError:
+        return False
+
+def parse_logs(lb, last, search_items):
     """
     Put all the methods in this module together:
 
@@ -156,7 +178,13 @@ def parse_logs(lb, last):
         body = s3_obj['Body']
         with gzip.open(body, 'rt') as gzipped_file:
             for this_line in gzipped_file:
-                print(json.dumps(parse_line(this_line)))
+                these_values = parse_line(this_line)
+
+                if search_items == ['']:
+                    print(json.dumps(these_values))
+                else:
+                    if find_in_dict(search_items, these_values):
+                        print(json.dumps(these_values))
 
 if __name__ == "__main__":
     main()
