@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__version__ = "0.0.8"
+__version__ = "0.1.0"
 
 import argparse
 import sys
@@ -24,21 +24,25 @@ def main():
         add_help=False
     )
 
-    main_search.add_argument("command", help="The subcommand to run", choices=["allowme", "ec2ls", "timeout-tester", "log-search"])
+    main_search.add_argument("command", help="The subcommand to run", choices=["allowme", "ec2ls", "stresstest", "st", "lblogs"])
 
     args, subc_args = main_search.parse_known_args()
 
     if args.command == "allowme":
-        import opstools.aws.allow_me as allow_me
+        from opstools.aws import allow_me
         allow_me.main(subc_args)
 
     if args.command == "ec2ls":
-        import opstools.aws.ec2_list as ec2_list
+        from opstools.aws import ec2_list
         ec2_list.main()
 
-    if args.command == "timeout-tester":
-        import opstools.url.timeout_tester as timeout_tester
-        timeout_tester.main(subc_args)
+    if args.command == "lblogs":
+        from opstools.aws import lb_logs
+        lb_logs.main(subc_args)
+
+    if args.command == "stresstest" or args.command == "st":
+        from opstools.url import stresstest
+        stresstest.main(subc_args)
 
     # WIP
     # if args.command == "log-search":

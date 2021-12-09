@@ -73,7 +73,7 @@ def main(subc_args=None):
     if not args.url.find('http://'[0:8]) or not args.url.find('https://'[0:8]):
         url = args.url
     else:
-        url = f"http://{args.url}"
+        url = f"https://{args.url}"
 
     urllib3.disable_warnings()
     end_time = time.time() + int(args.timeout) # pylint: disable=unused-variable
