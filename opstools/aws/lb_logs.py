@@ -100,41 +100,41 @@ def get_latest_logfiles(bucket):
 def parse_line(this_line):
     """ Parse [this_line] in the known AWS loadbalancer format """
 
-    split_line = this_line.split(" ")
+    these_values = [ e.strip('"') for e in this_line.split(" ") ]
 
-    formatted_line = {
-        "type": split_line[0].strip('"'),
-        "time": split_line[1].strip('"'),
-        "elb": split_line[2].strip('"'),
-        "client_port": split_line[3].strip('"'),
-        "target_port": split_line[4].strip('"'),
-        "request_processing_time": split_line[5].strip('"'),
-        "target_processing_time": split_line[6].strip('"'),
-        "response_processing_time": split_line[7].strip('"'),
-        "elb_status_code": split_line[8].strip('"'),
-        "target_status_code": split_line[9].strip('"'),
-        "received_bytes": split_line[10].strip('"'),
-        "sent_bytes": split_line[11].strip('"'),
-        "request_verb": split_line[12].strip('"'),
-        "request_url": split_line[13].strip('"'),
-        "request_protocol": split_line[14].strip('"'),
-        "user_agent": split_line[15].strip('"'),
-        "ssl_cipher": split_line[16].strip('"'),
-        "ssl_protocol": split_line[17].strip('"'),
-        "target_group_arn": split_line[18].strip('"'),
-        "trace_id": split_line[19].strip('"'),
-        "domain_name": split_line[20].strip('"'),
-        "chosen_cert_arn": split_line[21].strip('"'),
-        "matched_rule_priority": split_line[22].strip('"'),
-        "request_creation_time": split_line[23].strip('"'),
-        "actions_executed": split_line[24].strip('"'),
-        "redirect_url": split_line[25].strip('"'),
-        "lambda_error_reason": split_line[26].strip('"'),
-        "target_port_list": split_line[27].strip('"'),
-        "target_status_code_list": split_line[28].strip('"'),
-        "classification": split_line[29].strip('"'),
-        "classification_reason": split_line[30].strip('"'),
-    }
+    formatted_line = dict(zip([
+        "type",
+        "time",
+        "elb",
+        "client_port",
+        "target_port",
+        "request_processing_time",
+        "target_processing_time",
+        "response_processing_time",
+        "elb_status_code",
+        "target_status_code",
+        "received_bytes",
+        "sent_bytes",
+        "request_verb",
+        "request_url",
+        "request_protocol",
+        "user_agent",
+        "ssl_cipher",
+        "ssl_protocol",
+        "target_group_arn",
+        "trace_id",
+        "domain_name",
+        "chosen_cert_arn",
+        "matched_rule_priority",
+        "request_creation_time",
+        "actions_executed",
+        "redirect_url",
+        "lambda_error_reason",
+        "target_port_list",
+        "target_status_code_list",
+        "classification",
+        "classification_reason"
+    ], these_values))
 
     return formatted_line
 
