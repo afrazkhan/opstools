@@ -36,7 +36,7 @@ def main(subc_args=None):
     lb_logs_parser.add_argument("--search", "-s", default='', help="Space separated greedy search fields. E.g. 'client_port=89.205.139.161'")
     args = lb_logs_parser.parse_known_args(subc_args)[0]
 
-    if args.search != '' and not re.match(r"^((\w)+\=([\w.:\/])+\s?)+", args.search):
+    if args.search != '' and not re.match(r"^(([\w.:\/\-)+\=([\w.:\/\-])+\s?)+", args.search):
         print("The search items must match the format 'field=string'")
         sys.exit(0)
     search_items = args.search.split(' ')
