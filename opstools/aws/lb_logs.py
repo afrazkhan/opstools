@@ -104,46 +104,16 @@ def get_latest_logfiles(bucket):
 
     return sorted_objects
 
-def parse_line(this_line):
-    """ Parse [this_line] in the known AWS loadbalancer format """
+def create_entry(these_keys, spaced_values):
+    """
+    Make a list of values from the space separated string [spaced_values], and return
+    a dict by combining it with [these_keys]. [these_keys] must align to [spaced_values]
+    as there is no way to programatically gain knowledge of their relationships. Superfluous
+    keys will be discarded
+    """
 
-    these_values = [ e.strip('"') for e in this_line.split(" ") ]
-
-    formatted_line = dict(zip([
-        "type",
-        "time",
-        "elb",
-        "client_port",
-        "target_port",
-        "request_processing_time",
-        "target_processing_time",
-        "response_processing_time",
-        "elb_status_code",
-        "target_status_code",
-        "received_bytes",
-        "sent_bytes",
-        "request_verb",
-        "request_url",
-        "request_protocol",
-        "user_agent",
-        "ssl_cipher",
-        "ssl_protocol",
-        "target_group_arn",
-        "trace_id",
-        "domain_name",
-        "chosen_cert_arn",
-        "matched_rule_priority",
-        "request_creation_time",
-        "actions_executed",
-        "redirect_url",
-        "lambda_error_reason",
-        "target_port_list",
-        "target_status_code_list",
-        "classification",
-        "classification_reason"
-    ], these_values))
-
-    return formatted_line
+    these_values = [ e.strip('"') for e in spaced_values.split(" ") ]
+    return dict(zip(these_keys, these_values))
 
 def find_in_dict(search_items, this_dict):
     """
@@ -178,7 +148,39 @@ def parse_logs(lb, last, search_items):
         body = s3_obj['Body']
         with gzip.open(body, 'rt') as gzipped_file:
             for this_line in gzipped_file:
-                these_values = parse_line(this_line)
+                these_values = create_entry([
+                    "type",
+                    "time",
+                    "elb",
+                    "client_port",
+                    "target_port",
+                    "request_processing_time",
+                    "target_processing_time",
+                    "response_processing_time",
+                    "elb_status_code",
+                    "target_status_code",
+                    "received_bytes",
+                    "sent_bytes",
+                    "request_verb",
+                    "request_url",
+                    "request_protocol",
+                    "user_agent",
+                    "ssl_cipher",
+                    "ssl_protocol",
+                    "target_group_arn",
+                    "trace_id",
+                    "domain_name",
+                    "chosen_cert_arn",
+                    "matched_rule_priority",
+                    "request_creation_time",
+                    "actions_executed",
+                    "redirect_url",
+                    "lambda_error_reason",
+                    "target_port_list",
+                    "target_status_code_list",
+                    "classification",
+                    "classification_reason",
+                ], this_line)
 
                 if search_items == ['']:
                     print(json.dumps(these_values))

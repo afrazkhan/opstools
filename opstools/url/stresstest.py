@@ -84,7 +84,7 @@ def main(subc_args=None):
     else:
         codes = [200]
 
-    print(f"Requests will be sent every {rate} seconds. There will only be output if the status is not 200. Kill me with CTRL+C when you're done\n")
+    print(f"Requests will be sent every {rate} seconds. There will only be output if the status is not in the list provided with --codes (default is 200). Kill me with CTRL+C when you're done\n")
     for i in range(int(args.processes)):
         new_sessions_thread = threading.Thread(target=send_requests, args=(url, rate, codes,))
         new_sessions_thread.start()
