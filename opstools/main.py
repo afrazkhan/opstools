@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-__version__ = "0.2.1"
+__version__ = "0.3.0"
 
 import argparse
 import sys
@@ -24,7 +24,7 @@ def main():
         add_help=False
     )
 
-    main_search.add_argument("command", help="The subcommand to run", choices=["allowme", "ec2ls", "stresstest", "st", "lblogs"])
+    main_search.add_argument("command", help="The subcommand to run", choices=["allowme", "ec2ls", "st", "lblogs", "hosts"])
 
     args, subc_args = main_search.parse_known_args()
 
@@ -40,9 +40,13 @@ def main():
         from opstools.aws import lb_logs
         lb_logs.main(subc_args)
 
-    if args.command == "stresstest" or args.command == "st":
+    if args.command == "st":
         from opstools.url import stresstest
         stresstest.main(subc_args)
+
+    if args.command == "hosts":
+        from opstools.localhost import hosts
+        hosts.main(subc_args)
 
     # WIP
     # if args.command == "log-search":

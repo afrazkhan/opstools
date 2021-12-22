@@ -7,7 +7,7 @@ import re
 import os
 from setuptools import find_packages, setup
 
-DEPENDENCIES = ["boto3 >= 1.9.68", "requests"]
+DEPENDENCIES = ["boto3 >= 1.9.68", "requests", "python-hosts", "python-crontab"]
 EXCLUDE_FROM_PACKAGES = ["contrib", "docs", "tests*"]
 CURDIR = os.path.abspath(os.path.dirname(__file__))
 
