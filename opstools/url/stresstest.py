@@ -17,6 +17,15 @@ import requests
 import threading
 import sys
 
+
+def refresh_line(output):
+    """
+    Refreshes the output line to show the stress testing working
+    """
+
+    sys.stdout.write(f"\r{output}")
+    sys.stdout.flush()
+
 def send_requests(url, rate, codes, session=None):
     """
     Send requests to [url] with a new session per request, or the same session if [session]
@@ -26,6 +35,8 @@ def send_requests(url, rate, codes, session=None):
     fresh_sessions = False
     this_session = session
     these_headers = {}
+    error_counter = 0
+    last_error_time = "None"
 
     while True:
         time.time()
@@ -40,13 +51,17 @@ def send_requests(url, rate, codes, session=None):
         status = this_request.status_code
 
         if status not in codes:
-            print(f"ERROR: {status}, Fresh sessions: {fresh_sessions}\nHEADERS: {this_request.headers}")
+            error_counter += 1
+            last_error_time = time.ctime()
+        #     print(f"ERROR: {status}, Fresh sessions: {fresh_sessions}\nHEADERS: {this_request.headers}")
+
+        refresh_line(f"Last Error: {last_error_time} — Total Errors: {error_counter}")
         time.sleep(rate)
 
 def main(subc_args=None):
     """ Start the threads """
 
-    class MyParser(argparse.ArgumentParser):
+    class MyParser(argparse.ArgumentParser): # pylint: disable=missing-docstring
         def error(self, message):
             sys.stderr.write('error: %s\n' % message)
             self.print_help()
