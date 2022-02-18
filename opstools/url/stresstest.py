@@ -16,6 +16,7 @@ import urllib3
 import requests
 from multiprocessing import Process
 import sys
+import os
 
 
 def refresh_line(output):
@@ -62,6 +63,7 @@ def send_requests(url, rate, codes, session=None):
 
         if status not in codes:
             error_counter += 1
+            os.system("say 'Non-accepted HTTP code' received")
             last_error_time = time.ctime()
             write_log(f"""
 Time: {last_error_time}

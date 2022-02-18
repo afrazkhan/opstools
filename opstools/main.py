@@ -34,7 +34,7 @@ def main():
 
     if args.command == "ec2ls":
         from opstools.aws import ec2_list
-        ec2_list.main()
+        ec2_list.main(subc_args)
 
     if args.command == "lblogs":
         from opstools.aws import lb_logs
