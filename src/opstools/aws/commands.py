@@ -51,7 +51,7 @@ def lb_logs(ctx, lb, last, search):
     this_ec2_list.main(lb, last, search_items)
 
 @aws.command()
-@click.argument("security_group_id")
+@click.argument("security_group_id", required=False)
 @click.pass_context
 def sg_report(ctx, security_group_id):
     """ Print a report of what is using a security group """
