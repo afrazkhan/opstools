@@ -1,14 +1,14 @@
 #!/usr/bin/env python
 
 import boto3
-import botocore
 import sys
+from opstools.helpers.helper_functions import print_table
 
 def main():
     """ Main function for this command """
 
     simplified_listing = extract_interesting_keys(get_listing())
-    print_and_format(simplified_listing)
+    print_table(simplified_listing)
 
 def get_listing():
     """ Return a listing for EC2 instances """
@@ -60,22 +60,6 @@ def extract_interesting_keys(listing):
         simplified_listing.append({'name': name, 'instance_id': instance_id, 'private_ip': private_ip, 'public_ip': public_ip})
 
     return simplified_listing
-
-def print_and_format(simplified_listing):
-    """ Print out a pretty report of our EC2 listing """
-
-    for instance in simplified_listing:
-        print(
-            "\033[34mID: \033[0m{0:11}"
-            "\033[34m Name: \033[0m{1:30}"
-            "\033[34mIP: \033[0m{2:20}"
-            "\033[34mPublic IP: \033[0m{3:30}".format(
-                instance['instance_id'],
-                instance['name'][0:29],
-                instance['private_ip'],
-                instance['public_ip']
-            )
-        )
 
 if __name__ == "__main__":
     main()

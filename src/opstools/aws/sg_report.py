@@ -5,7 +5,7 @@ Print a report of what is using a security group
 import boto3
 import botocore
 import sys
-import tabulate
+from opstools.helpers.helper_functions import print_table
 
 def main(security_group_id):
     """ Main function for this module """
@@ -63,10 +63,3 @@ def get_security_groups():
         sys.exit(1)
 
     return simplified_listing
-
-def print_table(list_of_dicts):
-    """ Make and print a pretty table out of [list_of_dicts] """
-
-    header = list_of_dicts[0].keys()
-    rows = [this_dict.values() for this_dict in list_of_dicts]
-    print(tabulate.tabulate(rows, header))
