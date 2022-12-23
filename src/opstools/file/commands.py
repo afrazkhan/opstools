@@ -29,7 +29,7 @@ def log_search(ctx, fields, search_string, files):
 @click.option("--hosts-file", "-f", default="/etc/hosts", help="Location of hosts file. Only useful for testing")
 @click.pass_context
 def hosts(ctx, ip, names, rm, reminder_interval, hosts_file):
-    """ Add / remove entries to /etc/hosts, with reminders for removal """
+    """ Add / remove entries to /etc/hosts, with (MacOS) reminder notifications for removal """
 
     from opstools.file import hosts as this_hosts
     this_hosts.main(ip, names, rm, reminder_interval, hosts_file)

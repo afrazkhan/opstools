@@ -16,4 +16,42 @@
 
 > Silly ops things that you've had to write more than once
 
-Documentation coming. At some point.
+Stuff that I've had to write more than once, and now I keep as a collection in a Python package, called "opstools".
+
+It's split up into sub-command groups, which are (currently):
+
+* aws — Scripts to make working with AWS easier
+* file — Scripts which act on local files
+* url — Scripts which act on URLs
+
+Sub-commands are self-documented, so hit the `--help` for information. For example, there is a sub-command in the `aws` group called `allow-me`, which adds your current IP address to the security group for a public (AWS controlled) IP address you supply:
+
+```text
+$ opstools aws allow-me --help
+Usage: opstools aws allow-me [OPTIONS] HOSTNAME
+
+  Look up security groups associated with [hostname], and add port allowances
+  for this machine's IP
+
+Options:
+  -s, --ssh        Add port 22 to the first security group found
+  --https          Add ports 443 and 80 to the first security group found
+  -p, --port TEXT  Add a custom port to the first security group found
+  --help           Show this message and exit.
+```
+
+Or hit enter (or `--help`) at each group level to see a list of available sub-commands (and sub-groups, if any):
+
+```text
+$ opstools file
+Usage: opstools file [OPTIONS] COMMAND [ARGS]...
+
+  Scripts which act on files
+
+Options:
+  --help  Show this message and exit.
+
+Commands:
+  hosts       Add / remove entries to /etc/hosts, with (MacOS) reminder...
+  log-search  Parse arbitrarily headered log files for searching
+```
