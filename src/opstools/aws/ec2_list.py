@@ -25,7 +25,7 @@ def get_listing():
                 }
             ],
             MaxResults=1000)
-    except botocore.exceptions.ClientError as e:
+    except Exception as e:
         print(e)
         sys.exit(1)
 

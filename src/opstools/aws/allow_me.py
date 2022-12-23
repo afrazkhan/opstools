@@ -1,50 +1,21 @@
-#!/usr/bin/env python3
-
 """
-Given a hostname on AWS, add your IP to be allowed for the ports you specify, to the first security
-group found for that resource. Currently ALBs, ELBs, and EC2 instances are supported.
+Given a hostname on AWS, add your IP to be allowed for the ports you specify,
+to the first security group found for that resource. Currently ALBs, ELBs, and
+EC2 instances are supported.
 """
 
 import boto3
 from botocore.exceptions import ClientError # pylint: disable=unused-import
 import socket
-import argparse
 import requests
 import sys
 import os
 
-def main(subc_args=None):
+def main(hostname, ports):
     """ Main method for this command. Uses [subc_args] from parent command as a subset of options """
 
-    class MyParser(argparse.ArgumentParser):
-        """ Custom ArgumentParser so we can print the help by default """
-
-        def error(self, message):
-            sys.stderr.write('error: %s\n' % message)
-            self.print_help()
-            sys.exit(2)
-
-    allowme_parser = MyParser(description=
-        """
-        Given an AWS controlled hostname, find out if it's a resource you have access to,
-        find it's security groups if so, and allow your IP through the flagged ports
-        """
-    )
-
-    allowme_parser.add_argument("hostname", help="The AWS controlled hostname to change security group rules for")
-    allowme_parser.add_argument("--ssh", action="store_true", help="Add port 22 to the first security group found")
-    allowme_parser.add_argument("--https", action="store_true", help="Add ports 443 and 80 to the first security group found")
-    allowme_parser.add_argument("--port", "-p", help="Add a custom port to the first security group found")
-
-    args = allowme_parser.parse_known_args(subc_args)[0]
-    ports = make_port_list(args)
-
-    if ports == []:
-        print("No ports given to open, nothing to do")
-        sys.exit(0)
-
     my_info = get_my_info()
-    security_group = get_security_group(args.hostname)
+    security_group = get_security_group(hostname)
     update_security_group(my_info, security_group, ports)
 
 def get_security_group(hostname):
@@ -82,21 +53,6 @@ def get_my_info():
     """Return dict of {'ip', 'hostname'} for the IP this machine has at the time of calling"""
 
     return requests.get("https://ipinfo.io").json()
-
-def make_port_list(args):
-    """Return a list of the ports asked for by flags to the script"""
-
-    ports = []
-
-    if args.ssh:
-        ports.append(22)
-    if args.https:
-        ports.append(443)
-        ports.append(80)
-    if args.port is not None:
-        ports.append(args.port)
-
-    return ports
 
 def update_security_group(my_info, security_group, ports):
     """Add this machine's IP to the security group provided"""
@@ -181,6 +137,3 @@ def search_ec2(ec2_client, addresses):
                         return instance['SecurityGroups'][0]['GroupId']
             except KeyError:
                 pass
-
-if __name__ == "__main__":
-    main()

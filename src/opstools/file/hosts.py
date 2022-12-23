@@ -1,14 +1,25 @@
-#!/usr/bin/env python3
-
 """
 Sets an entry in /etc/hosts, and a crontab to remind you that it exists every 10 minutes
 """
 
-import argparse
 from python_hosts import Hosts, HostsEntry
 from crontab import CronTab
 import sys
 import os
+
+def main(ip, names, rm, reminder_interval, hosts_file):
+    """ Create the entry """
+
+    if not os.access(hosts_file, os.W_OK):
+        print("Can not write to hosts file. Please use sudo")
+        sys.exit(1)
+
+    etc_hosts = Hosts(hosts_file)
+
+    if rm:
+        remove_entry(names, etc_hosts)
+    else:
+        add_entry(ip, names, int(reminder_interval), etc_hosts)
 
 def create_crontab_entry(names, reminder_interval):
     """
@@ -28,9 +39,14 @@ def create_crontab_entry(names, reminder_interval):
 def add_entry(ip, names, reminder_interval, etc_hosts):
     """ Add the [entry] to /etc/hosts. Returns True on success and False on failure """
 
-    new_entry = HostsEntry(entry_type='ipv4', address=ip, names=names)
-    etc_hosts.add([new_entry], force=False, allow_address_duplication=True, merge_names=False)
-    etc_hosts.write()
+    try:
+        new_entry = HostsEntry(entry_type='ipv4', address=ip, names=names)
+        etc_hosts.add([new_entry], force=False, allow_address_duplication=True, merge_names=False)
+        etc_hosts.write()
+    except Exception as e:
+        print(e)
+        sys.exit(1)
+
     print(f"Added hosts entry for:\n\n{ip} {' '.join(names)}")
 
     create_crontab_entry(' '.join(names), reminder_interval)
@@ -51,35 +67,3 @@ def remove_entry(names, etc_hosts):
     cron.write()
 
     print(f"Removed any reminders and hosts entries matching:\n\n{names}")
-
-def main(subc_args=None):
-    """ Create the entry """
-
-    class MyParser(argparse.ArgumentParser): # pylint: disable=missing-docstring
-        def error(self, message):
-            sys.stderr.write(f"error: {message}\n")
-            self.print_help()
-            sys.exit(2)
-
-    hosts_parser = MyParser(description="Sets an entry in /etc/hosts, and reminds you about it every n minutes")
-
-    hosts_parser.add_argument("ip", help="IP to use for entry, followed by names to assign to it")
-    hosts_parser.add_argument("names", help="Names to assign to the IP", nargs="+")
-    hosts_parser.add_argument("--rm", "-r", action='store_true', help="Remove the entry instead of adding it")
-    hosts_parser.add_argument("--reminder-interval", "-i", default="10", help="How often to reminded you about the entry in minutes. Default is 10, and 0 disables reminders")
-    hosts_parser.add_argument("--hosts-file", "-f", default="/etc/hosts", help="Location of hosts file. Only useful for testing")
-    args = hosts_parser.parse_known_args(subc_args)[0]
-
-    if not os.access(args.hosts_file, os.W_OK):
-        print("Can not write to hosts file. Please use sudo")
-        sys.exit(1)
-
-    etc_hosts = Hosts(args.hosts_file)
-
-    if args.rm:
-        remove_entry(args.names, etc_hosts)
-    else:
-        add_entry(args.ip, args.names, int(args.reminder_interval), etc_hosts)
-
-if __name__ == "__main__":
-    main()
