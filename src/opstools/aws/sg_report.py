@@ -16,7 +16,10 @@ def main(security_group_id):
     else:
         report = get_report(security_group_id)
 
-    print_table(report)
+    if report != []:
+        print_table(report)
+    else:
+        print(f"Nothing to report for security group {security_group_id}, because it's not used in any network interfaces")
 
 def get_report(security_group_id):
     """ Print a report on what is using [security_group] """
