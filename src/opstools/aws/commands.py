@@ -52,12 +52,13 @@ def lb_logs(ctx, lb, last, search):
 
 @aws.command()
 @click.argument("security_group_id", required=False)
+@click.option("--all", "-a", "all_sgs", is_flag=True, help="Print report for all security groups found")
 @click.pass_context
-def sg_report(ctx, security_group_id):
+def sg_report(ctx, security_group_id, all_sgs):
     """ Print a report of what is using a security group """
 
     from opstools.aws import sg_report as this_sg_report
-    this_sg_report.main(security_group_id)
+    this_sg_report.main(security_group_id, all_sgs)
 
 
 ### Functions

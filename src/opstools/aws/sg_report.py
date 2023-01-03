@@ -7,19 +7,32 @@ import botocore
 import sys
 from opstools.helpers.helper_functions import print_table
 
-def main(security_group_id):
+def main(security_group_id, all_sgs):
     """ Main function for this module """
 
-    if not security_group_id:
-        print("Please pick a security group to report:\n")
-        report = get_security_groups()
+    # When user wants a report for all security groups, or when they don't
+    # specify one, then fetch a listing first
+    if all_sgs or security_group_id is None:
+        security_groups = get_security_groups()
+    # Otherewise, put the specified group in a list
     else:
-        report = get_report(security_group_id)
+        security_groups = [security_group_id]
 
-    if report != []:
-        print_table(report)
+    # User doesn't want a report for all security groups, or a single one
+    if not all_sgs and not security_group_id:
+        print("Please pick a security group to report:\n")
+        print_table(security_groups)
+    # Print reports for groups in 'security_groups'
     else:
-        print(f"Nothing to report for security group {security_group_id}, because it's not used in any network interfaces")
+        print("Only printing reports for security groups used by interfaces (i.e. in use)\n")
+        for this_group in security_groups:
+            this_report = get_report(this_group['group_id'])
+            if this_report != []:
+                print()
+                print_table(this_report)
+                print()
+            else:
+                print(f"Security group {this_group['group_id']} is not in use")
 
 def get_report(security_group_id):
     """ Print a report on what is using [security_group] """
@@ -37,9 +50,10 @@ def get_report(security_group_id):
     simplified_listing = []
     for interface in full_network_interfaces['NetworkInterfaces']:
         simplified_listing.append({
+            "security_group_id": security_group_id,
             "interface_id": interface['NetworkInterfaceId'],
             "status": interface['Attachment']['Status'],
-            "instance_id": interface['Attachment']['InstanceId'],
+            "instance_id": interface['Attachment'].get('InstanceId'),
             "interface_type": interface['InterfaceType'],
             "subnet_id": interface['SubnetId']
         })
