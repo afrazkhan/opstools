@@ -24,18 +24,15 @@ def main(security_group_id, all_sgs):
         print_table(security_groups)
     # Print reports for groups in 'security_groups'
     else:
-        print("Only printing reports for security groups used by interfaces (i.e. in use)\n")
+        consolidated_report = []
+        print("Report for all security groups. Missing values means it's not in use\n")
         for this_group in security_groups:
-            this_report = get_report(this_group['group_id'])
-            if this_report != []:
-                print()
-                print_table(this_report)
-                print()
-            else:
-                print(f"Security group {this_group['group_id']} is not in use")
+            consolidated_report.append(get_report(this_group['group_id']))
+
+        print_table(consolidated_report)
 
 def get_report(security_group_id):
-    """ Print a report on what is using [security_group] """
+    """ Return a dict with information on interfaces using [security_group_id] """
 
     ec2_client = boto3.client('ec2')
 
@@ -47,18 +44,16 @@ def get_report(security_group_id):
         print(e)
         sys.exit(1)
 
-    simplified_listing = []
+    simplified_listing = {}
     for interface in full_network_interfaces['NetworkInterfaces']:
-        simplified_listing.append({
-            "security_group_id": security_group_id,
-            "interface_id": interface['NetworkInterfaceId'],
-            "status": interface['Attachment']['Status'],
-            "instance_id": interface['Attachment'].get('InstanceId'),
-            "interface_type": interface['InterfaceType'],
-            "subnet_id": interface['SubnetId']
-        })
+        simplified_listing["security_group_id"] = security_group_id
+        simplified_listing["interface_id"] = interface['NetworkInterfaceId']
+        simplified_listing["status"] = interface['Attachment']['Status']
+        simplified_listing["instance_id"] = interface['Attachment'].get('InstanceId')
+        simplified_listing["interface_type"] = interface['InterfaceType']
+        simplified_listing["subnet_id"] = interface['SubnetId']
 
-    return simplified_listing
+    return simplified_listing or {"security_group_id": security_group_id}
 
 def get_security_groups():
     """ Print security groups """
