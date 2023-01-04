@@ -16,7 +16,7 @@ def main(security_group_id, all_sgs):
         security_groups = get_security_groups()
     # Otherewise, put the specified group in a list
     else:
-        security_groups = [security_group_id]
+        security_groups = [{"group_id": security_group_id}]
 
     # User doesn't want a report for all security groups, or a single one
     if not all_sgs and not security_group_id:
