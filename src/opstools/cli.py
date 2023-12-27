@@ -7,8 +7,6 @@ import click
 import os
 import sys
 
-from terraform_cloud_deployer import __version__
-
 __author__ = "Afraz Ahmadzadeh"
 __copyright__ = "Afraz Ahmadzadeh"
 __license__ = "MIT"
