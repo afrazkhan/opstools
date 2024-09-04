@@ -3,7 +3,7 @@ Print a report of what is using a security group
 """
 
 import boto3
-import botocore
+import botocore.exceptions as exceptions
 import sys
 from opstools.helpers.helper_functions import print_table
 
@@ -40,7 +40,7 @@ def get_report(security_group_id):
         full_network_interfaces = ec2_client.describe_network_interfaces(
             Filters=[{'Name': 'group-id','Values': [security_group_id]}]
         )
-    except botocore.exceptions.ClientError as e:
+    except exceptions.ClientError as e:
         print(e)
         sys.exit(1)
 

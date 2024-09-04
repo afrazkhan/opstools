@@ -5,6 +5,7 @@ TODO
 import click
 import sys
 import re
+from pprint import pprint
 
 @click.group
 @click.pass_context
@@ -19,12 +20,14 @@ def aws(ctx): # pylint: disable=unused-argument
 @click.option("--port", "-p", help="Add a custom port to the first security group found")
 @click.pass_context
 def allow_me(ctx, hostname, ssh, https, port):
-    """ Look up security groups associated with [hostname], and add port allowances for this machine's IP """
+    """
+    Look up security groups associated with [hostname], and add port allowances
+    for this machine's IP
+    """
 
     ports = make_port_list(ssh, https, port)
     from opstools.aws import allow_me as this_allow_me
     this_allow_me.main(hostname, ports)
-
 
 @aws.command()
 @click.pass_context
@@ -60,6 +63,95 @@ def sg_report(ctx, security_group_id, all_sgs):
     from opstools.aws import sg_report as this_sg_report
     this_sg_report.main(security_group_id, all_sgs)
 
+@aws.command()
+@click.option("--auto-confirm", "-a", is_flag=True, default=False, help="Nuke all found resources without asking for confirmation")
+@click.option("--dry-run", "-d", is_flag=True, default=False, help="Explicitly state that this is a dry run, and don't ask for confirmation. Overrules --auto-confirm")
+@click.option("--exclude-tag", "--et", multiple=True, help="Tags to exclude from the listing. Multiple occurences accepted. All resources not matching will be returned")
+@click.option("--include-tag", "--it", multiple=True, help="Tag to include in the listing. Multiple occurences accepted. Only matching resources will be returned")
+@click.option("--exclude-service", "--es", multiple=True, help="Service to exclude from the tagged listing. Multiple occurences accepted. All resources not matching will be returned")
+@click.option("--include-service", "--is", multiple=True, help="Service to include in the listing. Multiple occurences accepted. By default all services with tags will be included. Only matching will be returned")
+@click.option("--exclude-arn", "--ea", multiple=True, help="Specific resource ARNs to exlcude from nuking. Multiple occurences accepted. Remove from returned results")
+@click.option("--include-arn", "--ia", multiple=True, help="Specific resource ARNs to include. Multiple occurences accepted. Add to returned results")
+@click.option("--explore", "-x", is_flag=True, help="WIP: Used to list untagged resources. Can not be used for deletions directly")
+@click.option("--arns-only", "-o", is_flag=True, help="Only output the ARN list")
+@click.pass_context
+def nuke(
+    ctx,
+    auto_confirm: bool,
+    dry_run: bool,
+    exclude_tag,
+    include_tag: list,
+    exclude_service: list,
+    include_service: list,
+    exclude_arn: list,
+    include_arn: list,
+    explore: bool,
+    arns_only: bool):
+    """
+    Nuke tagged resources in AWS.
+
+    Inclusiona and exclusion options can be supplied multiple times to specify
+    multiple things to include or exclude.
+
+    Inclusions mean "only matching", exclusions mean "all except matching", and
+    supplying both means "only matching inclusions, except matching exclusions".
+
+    With the exception of --include-arn, only resources that have been tagged
+    will turn up in the result
+    """
+
+    from opstools.aws import nuke as nuke
+    nuker = nuke.Nuke()
+
+    if explore:
+        resources = nuker.get_resources_by_services(
+            exclude_services=exclude_service,
+            include_services=include_service,
+            exclude_arns=exclude_arn,
+            include_arns=include_arn)
+        pprint(resources)
+        sys.exit(0)
+
+    exclude_tags = list(exclude_tag)
+    include_tags = list(include_tag)
+    include_services = [f"AWS::{this_service}".upper() for this_service in list(include_service)]
+    exclude_services = [f"AWS::{this_service}".upper() for this_service in list(exclude_service)]
+    exclude_arns = list(exclude_arn)
+    include_arns = list(include_arn)
+
+    prospective_resources = nuker.prospective_resources(
+        exclude_tags=exclude_tags,
+        include_tags=include_tags,
+        exclude_services=exclude_services,
+        include_services=include_services,
+        exclude_arns=exclude_arns,
+        include_arns=include_arns)
+
+    if prospective_resources == []:
+        print("No resources found to delete.\n\nℹ️ Note that for reasons of safety, if no options are provided you will always get an empty list")
+        sys.exit(0)
+
+    print("Resources found to delete:\n")
+    if not arns_only:
+        for resource_arn, tags in prospective_resources.items():
+            print(f"ARN:  {resource_arn}\nTags: {tags}\n")
+    else:
+        pprint(list(prospective_resources.keys()))
+
+    if dry_run:
+        print("\nℹ️ --dry-run was passed, so we won't go further")
+    elif not auto_confirm:
+        confirmation = input("\n⚠️ Shall I delete the above resources? Only 'Y' or 'N' will be accepted ").upper()
+        while confirmation != 'Y' and confirmation != 'N':
+            confirmation = input("Only 'Y' or 'N' will be accepted ").upper()
+
+        if confirmation == 'Y':
+            nuker.nuke(list(prospective_resources.keys()))
+        else:
+            print("Coward")
+    else:
+        print("\nProceeding to deletions since --auto-confirm was supplied")
+        nuker.nuke(list(prospective_resources.keys()))
 
 ### Functions
 #

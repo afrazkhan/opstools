@@ -2,13 +2,9 @@
 
 build: clean
 	python -m pip install --upgrade --quiet setuptools wheel twine
-	python -m build
+	python setup.py --quiet sdist bdist_wheel
 
-build_publish: build
-	python -m twine check dist/*
-	python -m twine upload dist/*
-
-publish:
+publish: build
 	python -m twine check dist/*
 	python -m twine upload dist/*
 

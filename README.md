@@ -1,17 +1,3 @@
-<!-- These are examples of badges you might want to add to your README:
-     please update the URLs accordingly
-
-[![Built Status](https://api.cirrus-ci.com/github/<USER>/opstools.svg?branch=main)](https://cirrus-ci.com/github/<USER>/opstools)
-[![ReadTheDocs](https://readthedocs.org/projects/opstools/badge/?version=latest)](https://opstools.readthedocs.io/en/stable/)
-[![Coveralls](https://img.shields.io/coveralls/github/<USER>/opstools/main.svg)](https://coveralls.io/r/<USER>/opstools)
-[![PyPI-Server](https://img.shields.io/pypi/v/opstools.svg)](https://pypi.org/project/opstools/)
-[![Conda-Forge](https://img.shields.io/conda/vn/conda-forge/opstools.svg)](https://anaconda.org/conda-forge/opstools)
-[![Monthly Downloads](https://pepy.tech/badge/opstools/month)](https://pepy.tech/project/opstools)
-[![Twitter](https://img.shields.io/twitter/url/http/shields.io.svg?style=social&label=Twitter)](https://twitter.com/opstools)
--->
-
-[![Project generated with PyScaffold](https://img.shields.io/badge/-PyScaffold-005CA0?logo=pyscaffold)](https://pyscaffold.org/)
-
 # opstools
 
 > Silly ops things that you've had to write more than once
@@ -55,3 +41,48 @@ Commands:
   hosts       Add / remove entries to /etc/hosts, with (MacOS) reminder...
   log-search  Parse arbitrarily headered log files for searching
 ```
+
+## AWS Nuker
+
+Can be used to find and delete resources matching inclusion and exclusion filters. It only works on resources with tags, since not specifying qualifiers is too dangerous (with the exception of explicit inclusions, which you can see in the last example below).
+
+Will not act without confirmation, or the `--auto-confirm` option.
+
+Example usage:
+
+```sh
+# Only include resources with a tag key matching "Sandbox"
+opstools aws nuke --include-tag Sandbox
+
+# Include all resources with tags, and exclude ones that have a tag key
+# matching "Terraform"
+opstools aws nuke --exclude-tag Terraform
+
+# Include only resources with a tag key matching "Sandbox", then exclude ones
+# with a tag key matching "Terraform"
+opstools aws nuke --include-tag Sandbox --exclude-tag Terraform
+
+# Include all Lambda functions with the tag key "Sandbox"
+opstools aws nuke --include-tag Sandbox --include-service Lambda::Function
+
+# Include all resources with the tag key "Sandbox", but not Lambda functions
+opstools aws nuke --include-tag Sandbox --exclude-service Lambda::Function
+
+# Include only arn:aws:lambda:eu-central-1:107947530158:function:circle-ci-queue-trigger
+opstools aws nuke --include-arn arn:aws:lambda:eu-central-1:000000000000:function:something
+
+# Exclude the "Terraform" tag key and the resource "arn:aws:s3:::foobar" from results
+opstools aws nuke -d --et Terraform --ea 'arn:aws:s3:::foobar'
+```
+
+Service types can be found [here](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-resource-specification.html) (click on your region). `AWS::` is prepended for convenience, so for example you need only supply `Lambda::Function` rather than `AWS::Lambda::Function`.
+
+`--explore` is a special flag which can be used to find resources even if they are not tagged. It does not link directly to the delete function, but could be used to find a list of resources that could be fed in for deletion with the `--include-arn` option. It is more strict with resource type specification in that you must correctly capitalise, and provide the `AWS::` prefix:
+
+```sh
+opstools aws nuke --explore --include-resource 'AWS::Lambda::Function'
+```
+
+> :warning: Not supplying `--include-resource` will result in trying to fetch resources for _all_ services, which is a very costly operation
+
+See `opstools aws nuke --help` for full usage.
