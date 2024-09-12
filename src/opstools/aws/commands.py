@@ -119,17 +119,11 @@ def nuke(
     exclude_arns = list(exclude_arn)
     include_arns = list(include_arn)
 
-    include_tags_dict = {}
-    for this_tag in include_tags:
-        if '=' in this_tag:
-            key, value = this_tag.split("=")
-            include_tags_dict[key] = value
-        else:
-            include_tags_dict[this_tag] = None
-    # TODO: Do the same for exclude_tags
+    include_tags_dict = split_tags(include_tags)
+    exclude_tags_dict = split_tags(exclude_tags)
 
     prospective_resources = nuker.prospective_resources(
-        exclude_tags=exclude_tags,
+        exclude_tags_dict=exclude_tags_dict,
         include_tags_dict=include_tags_dict,
         exclude_services=exclude_services,
         include_services=include_services,
@@ -143,7 +137,9 @@ def nuke(
     print("Resources found to delete:\n")
     if not arns_only:
         for resource_arn, tags in prospective_resources.items():
-            print(f"ARN:  {resource_arn}\nTags: {tags}\n")
+            print(f"\nARN: {resource_arn}\nTags:")
+            for tag, value in tags.items():
+                print(f"  - {tag}: {value}")
     else:
         pprint(list(prospective_resources.keys()))
 
@@ -189,3 +185,18 @@ def make_port_list(ssh, https, port):
         ports.append(port)
 
     return ports
+
+def split_tags(tags: list) -> dict:
+    """
+    Split '=' separated key-value tags into key-value pairs and return them
+    """
+
+    tag_dict = {}
+    for this_tag in tags:
+        if '=' in this_tag:
+            key, value = this_tag.split("=")
+            tag_dict[key] = value
+        else:
+            tag_dict[this_tag] = None
+
+    return tag_dict

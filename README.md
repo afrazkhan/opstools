@@ -54,7 +54,11 @@ Example usage:
 # Only include resources with a tag key matching "application" with a value of "foobar"
 opstools aws nuke --include-tag application=foobar
 
-# Only include resources with a tag key matching "Sandbox". Note that only including the tag name implies that you only want to check for the presence of the tag name, not its value
+# Only include resources _without_ a tag key matching "application" with a value of "foobar"
+opstools aws nuke --exclude-tag application=foobar
+
+# Only include resources with a tag key matching "Sandbox".
+# Note that only including the tag name implies that you only want to check for the presence of the tag name, not its value
 opstools aws nuke --include-tag Sandbox
 
 # Include all resources with tags, and exclude ones that have a tag key

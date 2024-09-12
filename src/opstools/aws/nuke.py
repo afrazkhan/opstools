@@ -39,7 +39,7 @@ class Nuke():
         return resources
 
 
-    def filter_resources_by_tags(self, exclude_tags: list, include_tags_dict: dict) -> dict:
+    def filter_resources_by_tags(self, exclude_tags_dict: dict, include_tags_dict: dict) -> dict:
         """
         Return list of resource ARNs filtered by <exclude_tags> and <include_tags>.
         """
@@ -51,16 +51,15 @@ class Nuke():
             these_tag_keys = []
 
             # If no tagging options have been supplied, be safe and return nothing
-            if include_tags_dict == {} and exclude_tags == []:
+            if include_tags_dict == {} and exclude_tags_dict == {}:
                 continue
 
-            # these_tag_keys += [ tags['Key'] for tags in this_resource['Tags'] ]
             resource_tags = {}
             for this_tag in this_resource['Tags']:
                 resource_tags[this_tag['Key']] = this_tag['Value']
 
             contains_inclusion_tag = has_matching_item(resource_tags, include_tags_dict)
-            contains_exclusion_tag = not set(these_tag_keys).isdisjoint(exclude_tags)
+            contains_exclusion_tag = has_matching_item(resource_tags, exclude_tags_dict)
 
             # If tagged with something in the inclusion list and not tagged with
             # anything in the exclusion list, include the resource in the listing
@@ -76,7 +75,7 @@ class Nuke():
 
     def filter_resources(
             self,
-            exclude_tags: list,
+            exclude_tags_dict: dict,
             include_tags_dict: dict,
             exclude_services: list,
             include_services: list,
@@ -87,7 +86,7 @@ class Nuke():
         <exclude_services>, and <include_services>
         """
 
-        resources_by_tags = self.filter_resources_by_tags(exclude_tags, include_tags_dict)
+        resources_by_tags = self.filter_resources_by_tags(exclude_tags_dict, include_tags_dict)
 
         returned_resources = {}
         # If the ARN is to be explicitly included, add it to the listing
@@ -143,7 +142,7 @@ class Nuke():
 
     def prospective_resources(
             self,
-            exclude_tags: list,
+            exclude_tags_dict: dict,
             include_tags_dict: dict,
             exclude_services: list,
             include_services: list,
@@ -153,7 +152,7 @@ class Nuke():
         Return list of prospective resources to be deleted
         """
 
-        filtered_resources = self.filter_resources(exclude_tags,
+        filtered_resources = self.filter_resources(exclude_tags_dict,
                                                    include_tags_dict,
                                                    exclude_services,
                                                    include_services,
