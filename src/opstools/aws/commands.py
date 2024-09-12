@@ -130,11 +130,11 @@ def nuke(
         exclude_arns=exclude_arns,
         include_arns=include_arns)
 
-    if prospective_resources == []:
+    if prospective_resources == {}:
         print("No resources found to delete.\n\nℹ️ Note that for reasons of safety, if no options are provided you will always get an empty list")
         sys.exit(0)
 
-    print("Resources found to delete:\n")
+    print("Resources found to delete:")
     if not arns_only:
         for resource_arn, tags in prospective_resources.items():
             print(f"\nARN: {resource_arn}\nTags:")
