@@ -114,8 +114,8 @@ def nuke(
 
     exclude_tags = list(exclude_tag)
     include_tags = list(include_tag)
-    include_services = [f"AWS::{this_service}".upper() for this_service in list(include_service)]
-    exclude_services = [f"AWS::{this_service}".upper() for this_service in list(exclude_service)]
+    include_services = [this_service.upper() for this_service in list(include_service)]
+    exclude_services = [this_service.upper() for this_service in list(exclude_service)]
     exclude_arns = list(exclude_arn)
     include_arns = list(include_arn)
 
