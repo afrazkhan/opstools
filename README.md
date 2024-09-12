@@ -80,11 +80,14 @@ opstools aws nuke --include-arn arn:aws:lambda:eu-central-1:000000000000:functio
 
 # Exclude the "Terraform" tag key and the resource "arn:aws:s3:::foobar" from results
 opstools aws nuke -d --et Terraform --ea 'arn:aws:s3:::foobar'
+
+# Include only resources of type AWS::Lambda::Function
+opstools aws nuke --include-resource 'AWS::Lambda::Function'
 ```
 
 Service types can be found [here](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-resource-specification.html) (click on your region).
 
-`--explore` is a special flag which can be used to find resources even if they are not tagged. It does not link directly to the delete function, but could be used to find a list of resources that could be fed in for deletion with the `--include-arn` option. It is more strict with resource type specification in that you must correctly capitalise, and provide the `AWS::` prefix:
+`--explore` is a special flag which can be used to find resources even if they are not tagged. It does not link directly to the delete function, but could be used to find a list of resources that could be fed in for deletion with the `--include-arn`. It is more strict with resource type specification it must be correctly capitalised (for example 'AWS::Lambda::Function').
 
 ```sh
 opstools aws nuke --explore --include-resource 'AWS::Lambda::Function'

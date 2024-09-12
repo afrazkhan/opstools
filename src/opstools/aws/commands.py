@@ -141,16 +141,16 @@ def nuke(
             for tag, value in tags.items():
                 print(f"  - {tag}: {value}")
     else:
-        pprint(list(prospective_resources.keys()))
+        pprint([*prospective_resources])
 
     if dry_run:
         print("\nℹ️ --dry-run was passed, so we won't go further")
     elif not auto_confirm:
-        confirmation = input("\n⚠️ Shall I delete the above resources? Only 'Y' or 'N' will be accepted ").upper()
-        while confirmation != 'Y' and confirmation != 'N':
-            confirmation = input("Only 'Y' or 'N' will be accepted ").upper()
+        confirmation = input("\n⚠️ Shall I delete the above resources? Only 'yes' or 'N' will be accepted ").upper()
+        while confirmation != 'YES' and confirmation != 'N':
+            confirmation = input("Only 'yes' or 'n' will be accepted ").upper()
 
-        if confirmation == 'Y':
+        if confirmation == 'YES':
             nuker.nuke(list(prospective_resources.keys()))
         else:
             print("Coward")

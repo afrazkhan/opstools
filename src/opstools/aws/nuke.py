@@ -170,77 +170,77 @@ class Nuke():
 
         for arn in resource_arns:
             try:
-                resource_type = get_resource_type_from_arn(arn)
-                if resource_type == 'AWS::Lambda::Function':
+                resource_type = get_resource_type_from_arn(arn).upper()
+                if resource_type == 'AWS::LAMBDA::FUNCTION':
                     lambda_client = boto3.client('lambda')
                     lambda_client.delete_function(FunctionName=arn)
-                elif resource_type == 'AWS::EC2::Instance':
+                elif resource_type == 'AWS::EC2::INSTANCE':
                     ec2_client = boto3.client('ec2')
                     instance_id = arn.split('/')[-1]
                     ec2_client.terminate_instances(InstanceIds=[instance_id])
-                elif resource_type == 'AWS::S3::Bucket':
+                elif resource_type == 'AWS::S3::BUCKET':
                     s3_client = boto3.client('s3')
                     bucket_name = arn.split(':')[-1]
                     s3_client.delete_bucket(Bucket=bucket_name)
-                elif resource_type == 'AWS::IAM::Role':
+                elif resource_type == 'AWS::IAM::ROLE':
                     iam_client = boto3.client('iam')
                     role_name = arn.split('/')[-1]
                     iam_client.delete_role(RoleName=role_name)
-                elif resource_type == 'AWS::DynamoDB::Table':
+                elif resource_type == 'AWS::DYNAMODB::TABLE':
                     dynamodb_client = boto3.client('dynamodb')
                     table_name = arn.split('/')[-1]
                     dynamodb_client.delete_table(TableName=table_name)
-                elif resource_type == 'AWS::SQS::Queue':
+                elif resource_type == 'AWS::SQS::QUEUE':
                     sqs_client = boto3.client('sqs')
                     sqs_client.delete_queue(QueueUrl=arn)
-                elif resource_type == 'AWS::SNS::Topic':
+                elif resource_type == 'AWS::SNS::TOPIC':
                     sns_client = boto3.client('sns')
                     sns_client.delete_topic(TopicArn=arn)
-                elif resource_type == 'AWS::CloudFormation::Stack':
+                elif resource_type == 'AWS::CLOUDFORMATION::STACK':
                     cfn_client = boto3.client('cloudformation')
                     stack_name = arn.split('/')[-1]
                     cfn_client.delete_stack(StackName=stack_name)
-                elif resource_type == 'AWS::ApiGateway::RestApi':
+                elif resource_type == 'AWS::APIGATEWAY::RESTAPI':
                     apigw_client = boto3.client('apigateway')
                     api_id = arn.split('/')[-1]
                     apigw_client.delete_rest_api(restApiId=api_id)
-                elif resource_type == 'AWS::CloudWatch::Alarm':
+                elif resource_type == 'AWS::CLOUDWATCH::ALARM':
                     cw_client = boto3.client('cloudwatch')
                     alarm_name = arn.split(':')[-1]
                     cw_client.delete_alarms(AlarmNames=[alarm_name])
-                elif resource_type == 'AWS::Logs::LogGroup':
+                elif resource_type == 'AWS::LOGS::LOGGROUP':
                     logs_client = boto3.client('logs')
                     log_group_name = arn.split(':')[-1]
                     logs_client.delete_log_group(logGroupName=log_group_name)
-                elif resource_type == 'AWS::KMS::Key':
+                elif resource_type == 'AWS::KMS::KEY':
                     kms_client = boto3.client('kms')
                     key_id = arn.split('/')[-1]
                     kms_client.schedule_key_deletion(KeyId=key_id)
-                elif resource_type == 'AWS::ECS::Cluster':
+                elif resource_type == 'AWS::ECS::CLUSTER':
                     ecs_client = boto3.client('ecs')
                     cluster_name = arn.split('/')[-1]
                     ecs_client.delete_cluster(cluster=cluster_name)
-                elif resource_type == 'AWS::ECR::Repository':
+                elif resource_type == 'AWS::ECR::REPOSITORY':
                     ecr_client = boto3.client('ecr')
                     repo_name = arn.split('/')[-1]
                     ecr_client.delete_repository(repositoryName=repo_name, force=True)
-                elif resource_type == 'AWS::ElasticLoadBalancing::LoadBalancer':
+                elif resource_type == 'AWS::ELASTICLOADBALANCING::LOADBALANCER':
                     elb_client = boto3.client('elb')
                     lb_name = arn.split('/')[-1]
                     elb_client.delete_load_balancer(LoadBalancerName=lb_name)
-                elif resource_type == 'AWS::ElasticLoadBalancingV2::LoadBalancer':
+                elif resource_type == 'AWS::ELASTICLOADBALANCINGV2::LOADBALANCER':
                     elbv2_client = boto3.client('elbv2')
                     lb_arn = arn
                     elbv2_client.delete_load_balancer(LoadBalancerArn=lb_arn)
-                elif resource_type == 'AWS::RDS::DBInstance':
+                elif resource_type == 'AWS::RDS::DBINSTANCE':
                     rds_client = boto3.client('rds')
                     db_instance_id = arn.split(':')[-1]
                     rds_client.delete_db_instance(DBInstanceIdentifier=db_instance_id, SkipFinalSnapshot=True)
-                elif resource_type == 'AWS::Redshift::Cluster':
+                elif resource_type == 'AWS::REDSHIFT::CLUSTER':
                     redshift_client = boto3.client('redshift')
                     cluster_id = arn.split(':')[-1]
                     redshift_client.delete_cluster(ClusterIdentifier=cluster_id, SkipFinalClusterSnapshot=True)
-                elif resource_type == 'AWS::ElastiCache::CacheCluster':
+                elif resource_type == 'AWS::ELASTICACHE::CACHECLUSTER':
                     elasticache_client = boto3.client('elasticache')
                     cache_cluster_id = arn.split(':')[-1]
                     elasticache_client.delete_cache_cluster(CacheClusterId=cache_cluster_id)
@@ -248,31 +248,32 @@ class Nuke():
                     ec2_client = boto3.client('ec2')
                     vpc_id = arn.split('/')[-1]
                     ec2_client.delete_vpc(VpcId=vpc_id)
-                elif resource_type == 'AWS::AppSync::GraphQLApi':
+                elif resource_type == 'AWS::APPSYNC::GRAPHQLAPI':
                     appsync_client = boto3.client('appsync')
                     api_id = arn.split('/')[-1]
                     appsync_client.delete_graphql_api(apiId=api_id)
-                elif resource_type == 'AWS::Route53::HostedZone':
+                elif resource_type == 'AWS::ROUTE53::HOSTEDZONE':
                     route53_client = boto3.client('route53')
                     hosted_zone_id = arn.split('/')[-1]
                     route53_client.delete_hosted_zone(Id=hosted_zone_id)
-                elif resource_type == 'AWS::SecretsManager::Secret':
+                elif resource_type == 'AWS::SECRETSMANAGER::SECRET':
                     secretsmanager_client = boto3.client('secretsmanager')
                     secret_id = arn.split(':')[-1]
                     secretsmanager_client.delete_secret(SecretId=secret_id, ForceDeleteWithoutRecovery=True)
-                elif resource_type == 'AWS::SQS::Queue':
+                elif resource_type == 'AWS::SQS::QUEUE':
                     sqs_client = boto3.client('sqs')
                     queue_url = sqs_client.get_queue_url(QueueName=arn.split(':')[-1])['QueueUrl']
                     sqs_client.delete_queue(QueueUrl=queue_url)
-                elif resource_type == 'AWS::DynamoDB::Table':
+                elif resource_type == 'AWS::DYNAMODB::TABLE':
                     dynamodb_client = boto3.client('dynamodb')
                     table_name = arn.split('/')[-1]
                     dynamodb_client.delete_table(TableName=table_name)
                 else:
                     print(f"Deletion not implemented for resource type: {resource_type}")
-                print(f"Successfully deleted resource: {arn}")
+                    sys.exit(0)
+                print(f"Successfully sent deletion API call for: {arn}")
             except Exception as e:
-                print(f"Failed to delete resource {arn}: {str(e)}")
+                print(f"Failed to send deletion API call for resource {arn}: {str(e)}")
 
 
 
@@ -399,7 +400,6 @@ eu_central_1_services = [
     'AWS::WAFRegional::WebACL',
     'AWS::CloudFront::Distribution',
     'AWS::CloudFront::StreamingDistribution',
-    'AWS::Lambda::Function',
     'AWS::NetworkFirewall::Firewall',
     'AWS::NetworkFirewall::FirewallPolicy',
     'AWS::NetworkFirewall::RuleGroup',
