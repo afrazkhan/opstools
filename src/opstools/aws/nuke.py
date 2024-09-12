@@ -39,7 +39,7 @@ class Nuke():
         return resources
 
 
-    def filter_resources_by_tags(self, exclude_tags: list, include_tags: list) -> dict:
+    def filter_resources_by_tags(self, exclude_tags: list, include_tags_dict: dict) -> dict:
         """
         Return list of resource ARNs filtered by <exclude_tags> and <include_tags>.
         """
@@ -51,29 +51,33 @@ class Nuke():
             these_tag_keys = []
 
             # If no tagging options have been supplied, be safe and return nothing
-            if include_tags == [] and exclude_tags == []:
+            if include_tags_dict == {} and exclude_tags == []:
                 continue
 
-            these_tag_keys += [ tags['Key'] for tags in this_resource['Tags'] ]
+            # these_tag_keys += [ tags['Key'] for tags in this_resource['Tags'] ]
+            resource_tags = {}
+            for this_tag in this_resource['Tags']:
+                resource_tags[this_tag['Key']] = this_tag['Value']
+
+            contains_inclusion_tag = has_matching_item(resource_tags, include_tags_dict)
             contains_exclusion_tag = not set(these_tag_keys).isdisjoint(exclude_tags)
-            contains_inclusion_tag = not set(these_tag_keys).isdisjoint(include_tags)
 
             # If tagged with something in the inclusion list and not tagged with
             # anything in the exclusion list, include the resource in the listing
             if contains_inclusion_tag and not contains_exclusion_tag:
-                results[this_resource['ResourceARN']] = these_tag_keys
+                results[this_resource['ResourceARN']] = resource_tags
 
             # If not tagged with antyhing in the exclusion list, and inclusion
             # tags have not been set, then include the resource in the listing
-            if not contains_exclusion_tag and include_tags == []:
-                results[this_resource['ResourceARN']] = these_tag_keys
+            if not contains_exclusion_tag and include_tags_dict == {}:
+                results[this_resource['ResourceARN']] = resource_tags
 
         return results
 
     def filter_resources(
             self,
             exclude_tags: list,
-            include_tags: list,
+            include_tags_dict: dict,
             exclude_services: list,
             include_services: list,
             exclude_arns: list,
@@ -83,7 +87,7 @@ class Nuke():
         <exclude_services>, and <include_services>
         """
 
-        resources_by_tags = self.filter_resources_by_tags(exclude_tags, include_tags)
+        resources_by_tags = self.filter_resources_by_tags(exclude_tags, include_tags_dict)
 
         returned_resources = {}
         # If the ARN is to be explicitly included, add it to the listing
@@ -140,7 +144,7 @@ class Nuke():
     def prospective_resources(
             self,
             exclude_tags: list,
-            include_tags: list,
+            include_tags_dict: dict,
             exclude_services: list,
             include_services: list,
             exclude_arns: list,
@@ -150,7 +154,7 @@ class Nuke():
         """
 
         filtered_resources = self.filter_resources(exclude_tags,
-                                                   include_tags,
+                                                   include_tags_dict,
                                                    exclude_services,
                                                    include_services,
                                                    exclude_arns,
@@ -316,6 +320,20 @@ def get_resource_type_from_arn(arn: str) -> str:
     except IndexError:
         raise ValueError(f"Invalid ARN format: {arn}")
 
+def has_matching_item(map_a: dict, map_b: dict) -> bool:
+    """
+    Return True if map_a has a key-value pair that is present in map_b
+
+    Also returns True if the value for an item in map_b is None (presumes you
+    only want to check for the presence of the key in both maps in that case)
+    """
+
+    for key, value in map_a.items():
+        if key in map_b and (map_b[key] == value or map_b[key] == None):
+            return True
+    return False
+
+# All AWS services that have resource identifiers
 eu_central_1_services = [
     'AWS::Lambda::Function',
     'AWS::EC2::CustomerGateway',

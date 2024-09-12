@@ -119,9 +119,18 @@ def nuke(
     exclude_arns = list(exclude_arn)
     include_arns = list(include_arn)
 
+    include_tags_dict = {}
+    for this_tag in include_tags:
+        if '=' in this_tag:
+            key, value = this_tag.split("=")
+            include_tags_dict[key] = value
+        else:
+            include_tags_dict[this_tag] = None
+    # TODO: Do the same for exclude_tags
+
     prospective_resources = nuker.prospective_resources(
         exclude_tags=exclude_tags,
-        include_tags=include_tags,
+        include_tags_dict=include_tags_dict,
         exclude_services=exclude_services,
         include_services=include_services,
         exclude_arns=exclude_arns,
