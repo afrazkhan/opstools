@@ -87,6 +87,8 @@ class Nuke():
         """
 
         resources_by_tags = self.filter_resources_by_tags(exclude_tags_dict, include_tags_dict)
+        include_services = [service.upper() for service in include_services]
+        exclude_services = [service.upper() for service in exclude_services]
 
         returned_resources = {}
         # If the ARN is to be explicitly included, add it to the listing
@@ -135,9 +137,9 @@ class Nuke():
             response = self.config_client.list_discovered_resources(resourceType=resource)
             resource_list.append(response['resourceIdentifiers'])
 
-        resource_names = resource_arns_from_resource_identifiers(resource_list)
+        resource_arns = resource_arns_from_resource_identifiers(resource_list)
 
-        return resource_names
+        return resource_arns
 
 
     def prospective_resources(
