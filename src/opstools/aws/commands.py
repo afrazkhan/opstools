@@ -11,7 +11,9 @@ from pprint import pprint
 @click.pass_context
 def aws(ctx): # pylint: disable=unused-argument
     """ Commands for making your life in AWS easier """
-    pass # pylint: disable=unnecessary-pass
+
+    pass
+
 
 @aws.command()
 @click.argument("hostname")
@@ -101,7 +103,8 @@ def nuke(
     """
 
     from opstools.aws import nuke as nuke
-    nuker = nuke.Nuke()
+    logger = ctx.obj['logger']
+    nuker = nuke.Nuke(logger)
 
     if explore:
         resources = nuker.get_resources_by_services(

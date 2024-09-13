@@ -5,15 +5,20 @@ Nuke an AWS account within some parameters
 import boto3
 import botocore.exceptions as exceptions
 import sys
+import logging
+import inspect
 
 class Nuke():
     """ Nuke an AWS account within some parameters """
 
-    def __init__(self):
+    def __init__(self, logger):
         """ Nuke an AWS account within some parameters """
 
         self.tag_client = boto3.client('resourcegroupstaggingapi')
         self.config_client = boto3.client('config')
+        self.logger = logger
+        logging.getLogger('boto').setLevel(logging.CRITICAL)
+
 
         try:
             self.tag_client.get_tag_keys()
@@ -48,8 +53,6 @@ class Nuke():
 
         results = {}
         for this_resource in all_resources:
-            these_tag_keys = []
-
             # If no tagging options have been supplied, be safe and return nothing
             if include_tags_dict == {} and exclude_tags_dict == {}:
                 continue
@@ -93,14 +96,16 @@ class Nuke():
         returned_resources = {}
         # If the ARN is to be explicitly included, add it to the listing
         for arn in include_arns:
-            returned_resources[arn] = []
+            returned_resources[arn] = {"TAG": "Can not retrieve tags when specifying ARNs explicitly"}
 
         for resource_arn, tags in resources_by_tags.items():
-            resource_type = get_resource_type_from_arn(resource_arn).upper()
+            resource_type = get_resource_type_from_arn(resource_arn, self.logger).upper()
 
             # If an inclusion service is present, and no exclusion services are
             # present, and the ARN is not to be explicitly excluded, include the
             # resource in the listing
+            # print(resource_type)
+            # import pdb; pdb.set_trace() # pylint: disable=multiple-statements,no-member
             if resource_type in include_services and resource_type not in exclude_services and resource_arn not in exclude_arns:
                 returned_resources[resource_arn] = tags
 
@@ -172,7 +177,7 @@ class Nuke():
 
         for arn in resource_arns:
             try:
-                resource_type = get_resource_type_from_arn(arn).upper()
+                resource_type = get_resource_type_from_arn(arn, self.logger).upper()
                 if resource_type == 'AWS::LAMBDA::FUNCTION':
                     lambda_client = boto3.client('lambda')
                     lambda_client.delete_function(FunctionName=arn)
@@ -270,6 +275,15 @@ class Nuke():
                     dynamodb_client = boto3.client('dynamodb')
                     table_name = arn.split('/')[-1]
                     dynamodb_client.delete_table(TableName=table_name)
+                elif resource_type == 'AWS::APIGATEWAY::RESTAPI':
+                    apigateway_client = boto3.client('apigateway')
+                    api_id = arn.split('/')[-1]
+                    apigateway_client.delete_api_stage(restApiId=api_id, stageName='*')
+                    apigateway_client.delete_rest_api(restApiId=api_id)
+                elif resource_type == 'AWS::APIGATEWAY::APIKEYS':
+                    apigateway_client = boto3.client('apigateway')
+                    api_key_id = arn.split('/')[-1]
+                    apigateway_client.delete_api_key(apiKey=api_key_id)
                 else:
                     print(f"Deletion not implemented for resource type: {resource_type}")
                     sys.exit(0)
@@ -302,6 +316,10 @@ def resource_arns_from_resource_identifiers(resource_list: list) -> list:
                 arn = f"arn:aws:ec2:{region}:{account_id}:instance/{resource_id}"
             elif resource_type == 'AWS::S3::Bucket':
                 arn = f"arn:aws:s3:::{resource_name}"
+            elif resource_type == 'AWS::APIGATEWAY::RESTAPI':
+                arn = f"arn:aws:apigateway:{region}::/restapis/{resource_id}"
+            elif resource_type == 'AWS::APIGATEWAY::APIKEY':
+                arn = f"arn:aws:apigateway:{region}::/apikeys/{resource_id}"
             else:
                 # Generic ARN format for other resource types
                 service = resource_type.split('::')[1].lower()
@@ -311,13 +329,17 @@ def resource_arns_from_resource_identifiers(resource_list: list) -> list:
 
     return resource_names
 
-def get_resource_type_from_arn(arn: str) -> str:
+def get_resource_type_from_arn(arn: str, logger: logging.Logger) -> str:
     """ Return the resourceType of a resource by its ARN """
     try:
         arn_parts = arn.split(':')
         service_part = arn_parts[2]
-        resource_part = arn_parts[5].split('/')[0] if '/' in arn_parts[5] else arn_parts[5]
+        # FIXME: This catches API Gateway stages as 'restapi'
+        resource_part = arn_parts[5].split('/', 1)[1].split('/')[0] if arn_parts[5].startswith('/') else arn_parts[5].split('/')[0]
+        logger.debug(f" ⚠️ get_resource_type_from_arn() — arn: {arn}\narn_parts: {arn_parts}\nservice_part: {service_part}\nresource_part: {resource_part}\n")
+
         resource_type = f"AWS::{service_part}::{resource_part}"
+
         return resource_type
     except IndexError:
         raise ValueError(f"Invalid ARN format: {arn}")
