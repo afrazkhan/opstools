@@ -14,7 +14,7 @@ __license__ = "MIT"
 
 @click.group()
 @click.pass_context
-@click.option('--log-level', '-l', default='INFO', help='Set the logging level')
+@click.option('--log-level', '-l', type=click.Choice(['critical', 'error', 'warning', 'info', 'debug'], case_sensitive=False), default='INFO', help='Set the logging level')
 def run(ctx, log_level):
     """
     Useful scripts you couldn't be bothred to write
