@@ -75,11 +75,14 @@ opstools aws nuke --include-tag Sandbox --include-service AWS::Lambda::Function
 # Include all resources with the tag key "Sandbox", but not Lambda functions
 opstools aws nuke --include-tag Sandbox --exclude-service AWS::Lambda::Function
 
+# Only include results tagged with 'Terraform' AND 'application=api-app-x'
+opstools aws nuke --logical-and --it Terraform --include-tag application=api-app-x
+
 # Include only arn:aws:lambda:eu-central-1:107947530158:function:circle-ci-queue-trigger
 opstools aws nuke --include-arn arn:aws:lambda:eu-central-1:000000000000:function:something
 
 # Exclude the "Terraform" tag key and the resource "arn:aws:s3:::foobar" from results
-opstools aws nuke -d --et Terraform --ea 'arn:aws:s3:::foobar'
+opstools aws nuke -d --exclude-tag Terraform --exclude-arn 'arn:aws:s3:::foobar'
 ```
 
 Service types can be found [here](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-resource-specification.html) (click on your region).

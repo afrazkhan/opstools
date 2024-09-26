@@ -70,6 +70,7 @@ def sg_report(ctx, security_group_id, all_sgs):
 @click.option("--dry-run", "-d", is_flag=True, default=False, help="Explicitly state that this is a dry run, and don't ask for confirmation. Overrules --auto-confirm")
 @click.option("--exclude-tag", "--et", multiple=True, help="Tags to exclude from the listing. Multiple occurences accepted. All resources not matching will be returned")
 @click.option("--include-tag", "--it", multiple=True, help="Tag to include in the listing. Multiple occurences accepted. Only matching resources will be returned")
+@click.option("--logical-and", "-n", is_flag=True, default=False, help="Logical AND for tag inclusions. Default is OR")
 @click.option("--exclude-service", "--es", multiple=True, help="Service to exclude from the tagged listing. Multiple occurences accepted. All resources not matching will be returned")
 @click.option("--include-service", "--is", multiple=True, help="Service to include in the listing. Multiple occurences accepted. By default all services with tags will be included. Only matching will be returned")
 @click.option("--exclude-arn", "--ea", multiple=True, help="Specific resource ARNs to exlcude from nuking. Multiple occurences accepted. Remove from returned results")
@@ -83,6 +84,7 @@ def nuke(
     dry_run: bool,
     exclude_tag,
     include_tag: list,
+    logical_and: bool,
     exclude_service: list,
     include_service: list,
     exclude_arn: list,
@@ -131,7 +133,8 @@ def nuke(
         exclude_services=exclude_services,
         include_services=include_services,
         exclude_arns=exclude_arns,
-        include_arns=include_arns)
+        include_arns=include_arns,
+        logical_and=logical_and)
 
     if prospective_resources == {}:
         print("No resources found to delete.\n\nℹ️ Note that for reasons of safety, if no options are provided you will always get an empty list")

@@ -44,7 +44,7 @@ class Nuke():
         return resources
 
 
-    def filter_resources_by_tags(self, exclude_tags_dict: dict, include_tags_dict: dict) -> dict:
+    def filter_resources_by_tags(self, exclude_tags_dict: dict, include_tags_dict: dict, logical_and: bool) -> dict:
         """
         Return list of resource ARNs filtered by <exclude_tags> and <include_tags>.
         """
@@ -61,7 +61,12 @@ class Nuke():
             for this_tag in this_resource['Tags']:
                 resource_tags[this_tag['Key']] = this_tag['Value']
 
-            contains_inclusion_tag = has_matching_item(resource_tags, include_tags_dict)
+            if logical_and:
+                contains_inclusion_tag = all(has_matching_item(resource_tags, {tag: value}) for tag, value in include_tags_dict.items())
+            else:
+                contains_inclusion_tag = has_matching_item(resource_tags, include_tags_dict)
+
+            # Check if any exclusion tags are present
             contains_exclusion_tag = has_matching_item(resource_tags, exclude_tags_dict)
 
             # If tagged with something in the inclusion list and not tagged with
@@ -83,13 +88,14 @@ class Nuke():
             exclude_services: list,
             include_services: list,
             exclude_arns: list,
-            include_arns: list) -> dict:
+            include_arns: list,
+            logical_and: bool) -> dict:
         """
         Return list of resource ARNs filtered by <exclude_tags>, <include_tags>,
         <exclude_services>, and <include_services>
         """
 
-        resources_by_tags = self.filter_resources_by_tags(exclude_tags_dict, include_tags_dict)
+        resources_by_tags = self.filter_resources_by_tags(exclude_tags_dict, include_tags_dict, logical_and)
         include_services = [service.upper() for service in include_services]
         exclude_services = [service.upper() for service in exclude_services]
 
@@ -154,7 +160,8 @@ class Nuke():
             exclude_services: list,
             include_services: list,
             exclude_arns: list,
-            include_arns: list) -> dict:
+            include_arns: list,
+            logical_and: bool) -> dict:
         """
         Return list of prospective resources to be deleted
         """
@@ -164,7 +171,8 @@ class Nuke():
                                                    exclude_services,
                                                    include_services,
                                                    exclude_arns,
-                                                   include_arns)
+                                                   include_arns,
+                                                   logical_and)
 
         return filtered_resources
 
@@ -200,21 +208,13 @@ class Nuke():
                 elif resource_type == 'AWS::SQS::QUEUE':
                     sqs_client = boto3.client('sqs')
                     sqs_client.delete_queue(QueueUrl=arn)
-                elif resource_type == 'AWS::SNS::TOPIC':
-                    sns_client = boto3.client('sns')
-                    sns_client.delete_topic(TopicArn=arn)
-                elif resource_type == 'AWS::CLOUDFORMATION::STACK':
-                    cfn_client = boto3.client('cloudformation')
-                    stack_name = arn.split('/')[-1]
-                    cfn_client.delete_stack(StackName=stack_name)
                 elif resource_type == 'AWS::APIGATEWAY::RESTAPI':
                     apigw_client = boto3.client('apigateway')
                     api_id = arn.split('/')[-1]
                     apigw_client.delete_rest_api(restApiId=api_id)
-                elif resource_type == 'AWS::CLOUDWATCH::ALARM':
-                    cw_client = boto3.client('cloudwatch')
-                    alarm_name = arn.split(':')[-1]
-                    cw_client.delete_alarms(AlarmNames=[alarm_name])
+                elif resource_type == 'AWS::SNS::TOPIC':
+                    sns_client = boto3.client('sns')
+                    sns_client.delete_topic(TopicArn=arn)
                 elif resource_type == 'AWS::LOGS::LOGGROUP':
                     logs_client = boto3.client('logs')
                     log_group_name = arn.split(':')[-1]
@@ -331,11 +331,15 @@ def resource_arns_from_resource_identifiers(resource_list: list) -> list:
 
 def get_resource_type_from_arn(arn: str, logger: logging.Logger) -> str:
     """ Return the resourceType of a resource by its ARN """
+
     try:
         arn_parts = arn.split(':')
         service_part = arn_parts[2]
-        # FIXME: This catches API Gateway stages as 'restapi'
-        resource_part = arn_parts[5].split('/', 1)[1].split('/')[0] if arn_parts[5].startswith('/') else arn_parts[5].split('/')[0]
+
+        if service_part == 'apigateway' and 'stages' in arn_parts[5]:
+            resource_part = 'stage'
+        else:
+            resource_part = arn_parts[5].split('/', 1)[1].split('/')[0] if arn_parts[5].startswith('/') else arn_parts[5].split('/')[0]
         logger.debug(f" ⚠️ get_resource_type_from_arn() — arn: {arn}\narn_parts: {arn_parts}\nservice_part: {service_part}\nresource_part: {resource_part}\n")
 
         resource_type = f"AWS::{service_part}::{resource_part}"
