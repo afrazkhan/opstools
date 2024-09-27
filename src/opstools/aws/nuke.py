@@ -110,8 +110,6 @@ class Nuke():
             # If an inclusion service is present, and no exclusion services are
             # present, and the ARN is not to be explicitly excluded, include the
             # resource in the listing
-            # print(resource_type)
-            # import pdb; pdb.set_trace() # pylint: disable=multiple-statements,no-member
             if resource_type in include_services and resource_type not in exclude_services and resource_arn not in exclude_arns:
                 returned_resources[resource_arn] = tags
 
@@ -205,13 +203,6 @@ class Nuke():
                     dynamodb_client = boto3.client('dynamodb')
                     table_name = arn.split('/')[-1]
                     dynamodb_client.delete_table(TableName=table_name)
-                elif resource_type == 'AWS::SQS::QUEUE':
-                    sqs_client = boto3.client('sqs')
-                    sqs_client.delete_queue(QueueUrl=arn)
-                elif resource_type == 'AWS::APIGATEWAY::RESTAPI':
-                    apigw_client = boto3.client('apigateway')
-                    api_id = arn.split('/')[-1]
-                    apigw_client.delete_rest_api(restApiId=api_id)
                 elif resource_type == 'AWS::SNS::TOPIC':
                     sns_client = boto3.client('sns')
                     sns_client.delete_topic(TopicArn=arn)
@@ -255,10 +246,6 @@ class Nuke():
                     ec2_client = boto3.client('ec2')
                     vpc_id = arn.split('/')[-1]
                     ec2_client.delete_vpc(VpcId=vpc_id)
-                elif resource_type == 'AWS::APPSYNC::GRAPHQLAPI':
-                    appsync_client = boto3.client('appsync')
-                    api_id = arn.split('/')[-1]
-                    appsync_client.delete_graphql_api(apiId=api_id)
                 elif resource_type == 'AWS::ROUTE53::HOSTEDZONE':
                     route53_client = boto3.client('route53')
                     hosted_zone_id = arn.split('/')[-1]
@@ -269,29 +256,79 @@ class Nuke():
                     secretsmanager_client.delete_secret(SecretId=secret_id, ForceDeleteWithoutRecovery=True)
                 elif resource_type == 'AWS::SQS::QUEUE':
                     sqs_client = boto3.client('sqs')
-                    queue_url = sqs_client.get_queue_url(QueueName=arn.split(':')[-1])['QueueUrl']
+                    queue_name = arn.split(':')[-1]
+                    queue_url = sqs_client.get_queue_url(QueueName=queue_name)['QueueUrl']
                     sqs_client.delete_queue(QueueUrl=queue_url)
                 elif resource_type == 'AWS::DYNAMODB::TABLE':
                     dynamodb_client = boto3.client('dynamodb')
                     table_name = arn.split('/')[-1]
                     dynamodb_client.delete_table(TableName=table_name)
+
+                # TODO: Implement deletion for the following resource types
+                # arn:aws:apigateway:eu-central-1::/usageplans/hmjvee
+                # arn:aws:apigateway:eu-central-1::/domainnames/api-app-x.constr.dev.guidion.io
                 elif resource_type == 'AWS::APIGATEWAY::RESTAPI':
-                    apigateway_client = boto3.client('apigateway')
+                    print("API Gateway resources are not supported yet")
+                    continue
+                    apigw_client = boto3.client('apigateway')
                     api_id = arn.split('/')[-1]
-                    apigateway_client.delete_api_stage(restApiId=api_id, stageName='*')
-                    apigateway_client.delete_rest_api(restApiId=api_id)
+                    apigw_client.delete_rest_api(restApiId=api_id)
+                elif resource_type == 'AWS::APIGATEWAY::STAGE':
+                    print("API Gateway resources are not supported yet")
+                    continue
+                    apigateway_client = boto3.client('apigateway')
+                    api_id = arn.split('/')[2]
+                    stage_name = arn.split('/')[-1]
+                    apigateway_client.delete_stage(restApiId=api_id, stageName=stage_name)
                 elif resource_type == 'AWS::APIGATEWAY::APIKEYS':
+                    print("API Gateway resources are not supported yet")
+                    continue
                     apigateway_client = boto3.client('apigateway')
                     api_key_id = arn.split('/')[-1]
                     apigateway_client.delete_api_key(apiKey=api_key_id)
+
                 else:
                     print(f"Deletion not implemented for resource type: {resource_type}")
-                    sys.exit(0)
+                    continue
                 print(f"Successfully sent deletion API call for: {arn}")
             except Exception as e:
                 print(f"Failed to send deletion API call for resource {arn}: {str(e)}")
 
+    def find_domain_name(self, api_id: str) -> str:
+        """
+        Find the domain name mapped to <api_id>
+        """
 
+        apigateway_client = boto3.client('apigateway')
+
+        try:
+            domain_names = apigateway_client.get_domain_names()['items']
+            for domain in domain_names:
+                mapping_info = apigateway_client.get_base_path_mappings(domainName=domain['domainName'])
+                for mapping in mapping_info['items']:
+                    if mapping['restApiId'] == api_id:
+                        return domain['domainName']
+        except Exception as e:
+            print(f"Failed to retrieve domain names for {api_id}: {str(e)}")
+
+        return ""
+
+    def delete_api_custom_domain(self, domain_name: str, api_id: str) -> None:
+        """
+        Delete custom domain from API Gateway
+        """
+
+        apigateway_client = boto3.client('apigateway')
+        domain_name = self.find_domain_name(api_id)
+        mapping_info = apigateway_client.get_base_path_mappings(domainName=domain_name)
+        base_path = mapping_info['items'][0]['basePath']
+        this_api_id = mapping_info['items'][0]['restApiId']
+
+        if this_api_id != api_id:
+            self.logger.error(f"Refusing to delete ${domain_name} since the API ID received ({api_id}) did not match the API ID associated with the domain ({this_api_id})")
+            return
+
+        apigateway_client.delete_domain_name(domainName=domain_name)
 
 ### Functions
 
@@ -336,8 +373,11 @@ def get_resource_type_from_arn(arn: str, logger: logging.Logger) -> str:
         arn_parts = arn.split(':')
         service_part = arn_parts[2]
 
+        # Account for special cases where the resource type is not the second part
         if service_part == 'apigateway' and 'stages' in arn_parts[5]:
             resource_part = 'stage'
+        elif service_part == 'sqs':
+            resource_part = 'queue'
         else:
             resource_part = arn_parts[5].split('/', 1)[1].split('/')[0] if arn_parts[5].startswith('/') else arn_parts[5].split('/')[0]
         logger.debug(f" ⚠️ get_resource_type_from_arn() — arn: {arn}\narn_parts: {arn_parts}\nservice_part: {service_part}\nresource_part: {resource_part}\n")
