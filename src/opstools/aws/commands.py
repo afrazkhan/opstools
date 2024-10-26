@@ -105,8 +105,7 @@ def nuke(
     """
 
     from opstools.aws import nuke as nuke
-    logger = ctx.obj['logger']
-    nuker = nuke.Nuke(logger)
+    nuker = nuke.Nuke()
 
     if explore:
         resources = nuker.get_resources_by_services(

@@ -15,13 +15,12 @@ __license__ = "MIT"
 @click.group()
 @click.pass_context
 @click.option('--log-level', '-l', type=click.Choice(['critical', 'error', 'warning', 'info', 'debug'], case_sensitive=False), default='INFO', help='Set the logging level')
-def run(ctx, log_level):
+def run(ctx, log_level: str):
     """
     Useful scripts you couldn't be bothred to write
     """
-    logger = logging.getLogger(__name__)
+
     logging.basicConfig(level=log_level.upper())
-    ctx.obj = {'logger': logger}
     # Suppress boto3 logging (at least to 'CRITICAL')
     for name in ['boto', 'urllib3', 's3transfer', 'boto3', 'botocore', 'nose']:
         logging.getLogger(name).setLevel(logging.CRITICAL)

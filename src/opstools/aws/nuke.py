@@ -6,23 +6,22 @@ import boto3
 import botocore.exceptions as exceptions
 import sys
 import logging
-import inspect
 
 class Nuke():
     """ Nuke an AWS account within some parameters """
 
-    def __init__(self, logger):
+    def __init__(self):
         """ Nuke an AWS account within some parameters """
 
         self.tag_client = boto3.client('resourcegroupstaggingapi')
         self.config_client = boto3.client('config')
-        self.logger = logger
+        self.logger = logging.getLogger(__name__)
         logging.getLogger('boto').setLevel(logging.CRITICAL)
 
 
         try:
             self.tag_client.get_tag_keys()
-        except exceptions.NoCredentialsError as e:
+        except (exceptions.NoCredentialsError, exceptions.ClientError) as e:
             print(f"Error making request due to credentials. Are you authed?\n{e}")
             sys.exit(1)
 
