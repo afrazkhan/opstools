@@ -163,6 +163,22 @@ def nuke(
         print("\nProceeding to deletions since --auto-confirm was supplied")
         nuker.nuke(list(prospective_resources.keys()))
 
+@aws.command()
+@click.option("--bucket", "-b", type=str, required=True)
+@click.option("--prefix", "-p", type=str, required=False, default='')
+@click.option("--metadata-key", "-m", type=str, required=True)
+@click.option("--metadata-value", "-a", type=str, required=False)
+@click.pass_context
+def s3_md_search(ctx, bucket: str, prefix: str, metadata_key: str, metadata_value: str):
+    """
+    Search through custom metadata in S3 objects. If no value is given to search
+    for, then only the existence of <metadata-key> will be searched for
+    """
+
+    from opstools.aws import s3_metadata_search as s3_md_search
+    matching_files = s3_md_search.iterate_pages(bucket, prefix, metadata_key, metadata_value)
+    pprint(matching_files)
+
 ### Functions
 #
 def check_search_argument(search):
