@@ -6,7 +6,7 @@ import click
 import sys
 import re
 from pprint import pprint
-
+from datetime import datetime
 @click.group
 @click.pass_context
 def aws(ctx): # pylint: disable=unused-argument
@@ -171,19 +171,19 @@ def nuke(
 @click.option("--max-threads", "-t", type=int, required=False, default=10)
 @click.option("--max-retries-per-thread", "-r", type=int, required=False, default=10)
 @click.option("--retry-mode", "-e", type=str, required=False, default='standard')
-@click.option("--unimplemented-retry-delay", "-d", help="NOT IMPLEMENTED YET", type=int, required=False, default=1)
 @click.pass_context
-def s3_md_search(ctx, max_threads: int, max_retries_per_thread: int, retry_mode: str, unimplemented_retry_delay: int, bucket: str, prefix: str, metadata_key: str, metadata_value: str):
+def s3_md_search(ctx, max_threads: int, max_retries_per_thread: int, retry_mode: str, bucket: str, prefix: str, metadata_key: str, metadata_value: str):
     """
     Search through custom metadata in S3 objects. If no value is given to search
     for, then only the existence of <metadata-key> will be searched for
     """
 
     from opstools.aws import s3_metadata_search as s3_md_search
-    s3_md_search = s3_md_search.S3MetadataSearch(max_threads=max_threads, max_retries_per_thread=max_retries_per_thread, retry_mode=retry_mode, retry_delay=unimplemented_retry_delay, bucket_name=bucket, prefix=prefix, metadata_key=metadata_key, metadata_value= metadata_value)
+    s3_md_search = s3_md_search.S3MetadataSearch(max_threads=max_threads, max_retries_per_thread=max_retries_per_thread, retry_mode=retry_mode, bucket_name=bucket, prefix=prefix, metadata_key=metadata_key, metadata_value=metadata_value)
     matching_files = s3_md_search.iterate_pages()
 
-    pprint(f"Results:\n{matching_files}")
+    print("Results:")
+    pprint(matching_files)
 
 ### Functions
 #

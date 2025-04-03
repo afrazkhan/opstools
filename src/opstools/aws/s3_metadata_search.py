@@ -1,24 +1,25 @@
 import boto3
-from botocore.config import Config as botoConfig
+from botocore.config import Config as BotoConfig
 from botocore.exceptions import ClientError
 from typing import Dict
 from threading import Thread, Lock
 import logging
 import sys
+from datetime import datetime
 
 class S3MetadataSearch():
-    def __init__(self, max_threads: int, max_retries_per_thread: int, retry_mode: str, retry_delay: int, bucket_name: str, prefix: str, metadata_key: str, metadata_value: str | None = None):
-        boto_config = botoConfig(
+    def __init__(self, max_threads: int, max_retries_per_thread: int, retry_mode: str, bucket_name: str, prefix: str, metadata_key: str, metadata_value: str | None = None):
+        boto_config = BotoConfig(
            retries = {
               'max_attempts': max_retries_per_thread,
-              'mode': retry_mode
+              'mode': retry_mode # pyright: ignore
            }
         )
+
         self.s3 = boto3.client('s3', config=boto_config)
 
         self.max_threads = max_threads
         self.max_retries_per_thread = max_retries_per_thread
-        self.retry_delay = retry_delay
         self.bucket_name = bucket_name
         self.prefix = prefix
         self.metadata_key = metadata_key
@@ -31,8 +32,9 @@ class S3MetadataSearch():
         for obj in page.get('Contents', []):
             try:
                 object_info = self.s3.head_object(Bucket=self.bucket_name, Key=obj['Key'])
+
             except ClientError as e:
-                logging.critical(f"Unrecoverable problem whilst trying to retrieve object info: {e.response['Error']['Code']}")
+                logging.critical(f"Unrecoverable problem whilst trying to retrieve object info: {e.response}")
                 sys.exit(1)
 
             try:
@@ -64,6 +66,7 @@ class S3MetadataSearch():
         def process_page(page):
             nonlocal objects
             page_results = self.search_objects_metadata(page)
+            print(f"Results in last page:\n{page_results}")
             with objects_lock:
                 objects.update(page_results)
 
