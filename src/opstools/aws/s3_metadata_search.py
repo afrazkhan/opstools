@@ -66,7 +66,6 @@ class S3MetadataSearch():
         def process_page(page):
             nonlocal objects
             page_results = self.search_objects_metadata(page)
-            print(f"Results in last page:\n{page_results}")
             with objects_lock:
                 objects.update(page_results)
 
