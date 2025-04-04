@@ -168,7 +168,7 @@ def nuke(
 @click.option("--prefix", "-p", type=str, required=False, default='')
 @click.option("--metadata-key", "-m", type=str, required=True)
 @click.option("--metadata-value", "-a", type=str, required=False)
-@click.option("--max-threads", "-t", type=int, required=False, default=10)
+@click.option("--max-threads", "-t", type=int, required=False)
 @click.option("--max-retries-per-thread", "-r", type=int, required=False, default=10)
 @click.option("--retry-mode", "-e", type=str, required=False, default='standard')
 @click.pass_context

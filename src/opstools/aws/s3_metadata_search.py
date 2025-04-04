@@ -77,7 +77,7 @@ class S3MetadataSearch():
                 threads.append(thread)
                 thread_number += 1
 
-                if thread_number > self.max_threads:
+                if self.max_threads is not None and thread_number > self.max_threads: # type: ignore
                     print(f"Max threads reached, waiting for threads to complete")
                     break
         except ClientError as e:
