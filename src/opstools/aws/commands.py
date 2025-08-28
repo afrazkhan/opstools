@@ -66,6 +66,25 @@ def sg_report(ctx, security_group_id, all_sgs):
     this_sg_report.main(security_group_id, all_sgs)
 
 @aws.command()
+@click.pass_context
+@click.option("--user", "-u", type=str)
+@click.option("--days-back", "-d", type=int, default=30)
+@click.option("--event-types", "-e", help='Override the (creation type) event types to look for', type=str, default="Create, Run, Launch, Put")
+def find_actions(ctx, user, days_back, event_types):
+    from opstools.aws import find_actions as find_actions
+    event_types = [x.strip() for x in event_types.split(',')]
+    events = find_actions.get_resources_created_by_user(user, days_back, event_types)
+
+    for event in events:
+        print(f"User: {event['Username']}")
+        print(f"Action: {event['EventName']}")
+        print(f"Time: {event['EventTime']}")
+        print(f"Resources: {event['Resources']}")
+        print("---")
+
+
+
+@aws.command()
 @click.option("--auto-confirm", "-a", is_flag=True, default=False, help="Nuke all found resources without asking for confirmation")
 @click.option("--dry-run", "-d", is_flag=True, default=False, help="Explicitly state that this is a dry run, and don't ask for confirmation. Overrules --auto-confirm")
 @click.option("--exclude-tag", "--et", multiple=True, help="Tags to exclude from the listing. Multiple occurences accepted. All resources not matching will be returned")

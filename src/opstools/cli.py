@@ -5,7 +5,7 @@ Top level command for opstools
 import logging
 import click
 
-from terraform_cloud_deployer import __version__
+from opstools import __version__
 
 __author__ = "Afraz Ahmadzadeh"
 __copyright__ = "Afraz Ahmadzadeh"
