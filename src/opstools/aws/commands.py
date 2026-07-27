@@ -183,6 +183,19 @@ def nuke(
         nuker.nuke(list(prospective_resources.keys()))
 
 @aws.command()
+@click.argument("lambdas", required=True, nargs=-1)
+@click.option("--report", "-r", is_flag=True, help="Read-only: report whether the issue looks to be in effect, without creating or switching any roles")
+@click.pass_context
+def fix_lambda_perms(ctx, lambdas, report):
+    """
+    Works around this security feature:\n
+    https://repost.aws/knowledge-center/lambda-kmsaccessdeniedexception-errors
+    """
+
+    from opstools.aws import fix_lambda_perms as this_fix_lambda_perms
+    this_fix_lambda_perms.main(list(lambdas), report=report)
+
+@aws.command()
 @click.option("--bucket", "-b", type=str, required=True)
 @click.option("--prefix", "-p", type=str, required=False, default='')
 @click.option("--metadata-key", "-m", type=str, required=True)

@@ -6,9 +6,9 @@ Stuff that I've had to write more than once, and now I keep as a collection in a
 
 It's split up into sub-command groups, which are (currently):
 
-* aws — Scripts to make working with AWS easier
-* file — Scripts which act on local files
-* url — Scripts which act on URLs
+- aws — Scripts to make working with AWS easier
+- file — Scripts which act on local files
+- url — Scripts which act on URLs
 
 Sub-commands are self-documented, so hit the `--help` for information. For example, there is a sub-command in the `aws` group called `allow-me`, which adds your current IP address to the security group for a public (AWS controlled) IP address you supply:
 
@@ -41,6 +41,17 @@ Commands:
   hosts       Add / remove entries to /etc/hosts, with (MacOS) reminder...
   log-search  Parse arbitrarily headered log files for searching
 ```
+
+## Installation
+
+Latest:
+
+```sh
+git clone git@github.com:afrazkhan/opstools.git && cd opstools
+pip install .
+```
+
+PyPi: `pip install opstools`
 
 ## AWS Nuker
 

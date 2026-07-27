@@ -17,7 +17,7 @@ __license__ = "MIT"
 @click.option('--log-level', '-l', type=click.Choice(['critical', 'error', 'warning', 'info', 'debug'], case_sensitive=False), default='INFO', help='Set the logging level')
 def run(ctx, log_level: str):
     """
-    Useful scripts you couldn't be bothred to write
+    Useful scripts you couldn't be bothered to write
     """
 
     logging.basicConfig(level=log_level.upper())
